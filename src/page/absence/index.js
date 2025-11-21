@@ -37,6 +37,7 @@ import {
   SET_DATA_USER,
   SET_DATA_HIGHTACCURACY,
 } from '../../redux/action';
+import { InlineVisionCamera } from '../absence/InlineVisionCamera';
 
 const Absence = ({navigation, route}) => {
   const TOKEN = useSelector(state => state.TokenReducer);
@@ -247,7 +248,7 @@ const Absence = ({navigation, route}) => {
     setfakeGpsV(0);
     fakeGps();
     Promise.all([
-      myFunctions.checkFingerprint(),
+      //myFunctions.checkFingerprint(),
       myFunctions.permissionCamera(),
       myFunctions.permissionLocation(),
     ])
@@ -365,7 +366,7 @@ const Absence = ({navigation, route}) => {
     fakeGps();
     // myFunctions.fakeGps();
     Promise.all([
-      myFunctions.checkFingerprint(),
+      //myFunctions.checkFingerprint(),
       myFunctions.permissionCamera(),
       myFunctions.permissionLocation(),
       // myFunctions.fakeGps(),
@@ -838,44 +839,11 @@ const Absence = ({navigation, route}) => {
                   {/* <Text>Tesssssx</Text> */}
                 </TouchableOpacity>
                 {route.params.type == 'break' ? (
-                  <TouchableOpacity
-                    onPress={() =>
-                      launchCamera(
-                        {
-                          mediaType: 'photo',
-                          includeBase64: true,
-                          maxHeight: 900,
-                          maxWidth: 900,
-                          cameraType: 'back',
-                        },
-                        response => {
-                          console.log('ini respon', response);
-                          if (response.assets) {
-                            let image = response.assets[0];
-                            route.params.image = image;
-                            route.params.image.filename = image.fileName;
-                            route.params.image.uri = image.uri;
-                            setImageUri(image.uri);
-                          }
-                        },
-                      )
-                    }>
-                    {imageUri == '' ? (
-                      <View style={styles.image}>
-                        <Icon
-                          name="camera-retro"
-                          size={windowHeight * 0.08}
-                          color="#000000"
-                        />
-                      </View>
-                    ) : (
-                      <Image
-                        style={styles.image}
-                        source={{uri: imageUri}}
-                        // source={image.uri=='' || image.uri==null ? require('../../../assets/img/ImageFoto.png'): {uri: image.from=='local' ? image.uri : `https://simpletabadmin.ptab-vps-storage.com/` + `${String(image.uri).replace('public/', '')}?time="${new Date()}`}}
-                      />
-                    )}
-                  </TouchableOpacity>
+                  <InlineVisionCamera
+                                      route={route}
+                                      setImageUri={setImageUri}
+                                      imageUri={imageUri}
+                                    />
                 ) : (
                   <TouchableOpacity
                     onPress={() =>

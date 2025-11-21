@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.absesnsipegawaiapp">
+    package="com.perumdatab.absence">
 
     <!-- Required by react-native-vision-camera -->
     <uses-permission android:name="android.permission.CAMERA" />

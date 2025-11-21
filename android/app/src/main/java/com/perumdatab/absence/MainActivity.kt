@@ -1,4 +1,4 @@
-package com.absesnsipegawaiapp
+package com.perumdatab.absence
 
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate

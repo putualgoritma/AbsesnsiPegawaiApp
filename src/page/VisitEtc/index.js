@@ -252,9 +252,11 @@ const VisitEtc = ({ navigation, route }) => {
       // console.log('tesssd ', data);
       } else {
       Alert.alert('Keterangan kosong !', 'mohon isi keterangan');
+      setLoading(false);
     }
     } else {
       Alert.alert('Gambar Kosong !', 'pilih gambar terlebih dahulu');
+      setLoading(false);
     }
   };
 

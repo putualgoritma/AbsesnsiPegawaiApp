@@ -9,16 +9,15 @@ import {
   Image,
   Alert,
 } from 'react-native';
-import React, {useEffect, useState} from 'react';
-import MapView, {Callout, Marker, Circle} from 'react-native-maps';
+import React, { useEffect, useState, useRef } from 'react';
+import MapView, { Callout, Marker, Circle } from 'react-native-maps';
 import Geolocation from '@react-native-community/geolocation';
-import {useSelector} from 'react-redux';
+import { useSelector } from 'react-redux';
 import API from '../../service';
 import ReactNativeBiometrics from 'react-native-biometrics';
 import RNFetchBlob from 'react-native-blob-util';
-import {getDistance} from 'geolib';
+import { getDistance } from 'geolib';
 import Icon from 'react-native-vector-icons/FontAwesome5';
-import {launchCamera} from 'react-native-image-picker';
 import ScreenLoading from '../loading/ScreenLoading';
 import Textarea from 'react-native-textarea';
 import myFunctions from '../../functions';
@@ -27,8 +26,10 @@ import {
   MockLocationDetectorErrorCode,
 } from 'react-native-turbo-mock-location-detector';
 import Config from 'react-native-config';
+import { InlineVisionCamera } from '../absence/InlineVisionCamera';
+import {launchCamera} from 'react-native-image-picker';
 
-const AbsenceOff = ({navigation, route}) => {
+const AbsenceOff = ({ navigation, route }) => {
   const TOKEN = useSelector(state => state.TokenReducer);
   const USER = useSelector(state => state.UserReducer);
   const USER_ID = useSelector(state => state.UserReducer.id);
@@ -49,7 +50,7 @@ const AbsenceOff = ({navigation, route}) => {
   const [courseDetails, setCourseDetails] = useState();
   const [jarak, setJarak] = useState('');
   const [test, setTest] = useState('');
-  const {width, height} = Dimensions.get('window');
+  const { width, height } = Dimensions.get('window');
   const ASPECT_RATIO = width / height;
   const LATITUDE_DELTA = 0.4922;
   const LONGITUDE_DELTA = LATITUDE_DELTA * ASPECT_RATIO;
@@ -71,11 +72,33 @@ const AbsenceOff = ({navigation, route}) => {
   const [fakeGpsV, setfakeGpsV] = useState(0);
   const rnBiometrics = new ReactNativeBiometrics();
 
+  // Capture function
+  const takePhoto = async () => {
+    if (camera.current == null) return;
+    try {
+      const photo = await camera.current.takePhoto({
+        qualityPrioritization: 'quality', // best possible
+      });
+      console.log('Photo captured:', photo.path);
+
+      const uri = 'file://' + photo.path;
+      route.params.image = {
+        uri: uri,
+        fileName: photo.path.split('/').pop(),
+        type: 'image/jpeg',
+      };
+      setImageUri(uri);
+      setShowCamera(false);
+    } catch (e) {
+      console.log('Error taking photo:', e);
+    }
+  };
+
   const fakeGps = async () => {
     console.log('Fake GPS');
     // return true;
     await isMockingLocation()
-      .then(({isLocationMocked}) => {
+      .then(({ isLocationMocked }) => {
         if (isLocationMocked === true) {
           // alert('gps falsu');
           setfakeGpsV(2);
@@ -129,7 +152,7 @@ const AbsenceOff = ({navigation, route}) => {
   };
 
   useEffect(() => {
-    console.log(route.params);
+    console.log('route.params', route.params);
     setLoading(true);
     fakeGps();
     Promise.all([
@@ -190,43 +213,43 @@ const AbsenceOff = ({navigation, route}) => {
 
   const authCurrent = () => {
     rnBiometrics.simplePrompt({ promptMessage: 'Scan your fingerprint' })
-          .then(resultObject => {
-            const { success } = resultObject;
-            if (success) {
-              console.log('Authenticated successfully');
-              handleAction();
-            } else {
-              setLoading(false);
-              console.log('User cancelled biometric prompt');
-            }
-          })
-          .catch(error => {
-            setLoading(false);
-            if (error.name == 'DeviceLocked') {
-              // if(timeD > 0){
-              //   Alert.alert('Tunggu beberapa saat dan klik ulang tombol absen')
-              // }
-              // else{
-              Alert.alert('Tunggu sekitar 30 detik dan klik ulang tombol absen');
-              // }
-    
-              // setTimeD(30);
-              // handleActionErr()
-            } else if (error.name == 'DeviceLockedPermanent') {
-              Alert.alert('Kunci HP Anda dan masuk dengan sandi anda');
-            } else if (error.name == 'DeviceLockedPermanent') {
-              Alert.alert('Kunci HP Anda dan masuk dengan sandi anda');
-            } else if (error.name == 'NotEnrolled') {
-              Alert.alert(
-                'Aktifkan Fingerprint anda, masuk ke setting/sandi&keamanan pilih sidik jari',
-              );
-            } else {
-              // Alert.alert('Aktifkan Fingerprint anda, masuk ke setting/sandi&keamanan pilih sidik jari')
-              // test
-              Alert.alert('Err Fingerprint: ', error.name);
-            }
-            console.log('Biometric error', error);
-          });  
+      .then(resultObject => {
+        const { success } = resultObject;
+        if (success) {
+          console.log('Authenticated successfully');
+          handleAction();
+        } else {
+          setLoading(false);
+          console.log('User cancelled biometric prompt');
+        }
+      })
+      .catch(error => {
+        setLoading(false);
+        if (error.name == 'DeviceLocked') {
+          // if(timeD > 0){
+          //   Alert.alert('Tunggu beberapa saat dan klik ulang tombol absen')
+          // }
+          // else{
+          Alert.alert('Tunggu sekitar 30 detik dan klik ulang tombol absen');
+          // }
+
+          // setTimeD(30);
+          // handleActionErr()
+        } else if (error.name == 'DeviceLockedPermanent') {
+          Alert.alert('Kunci HP Anda dan masuk dengan sandi anda');
+        } else if (error.name == 'DeviceLockedPermanent') {
+          Alert.alert('Kunci HP Anda dan masuk dengan sandi anda');
+        } else if (error.name == 'NotEnrolled') {
+          Alert.alert(
+            'Aktifkan Fingerprint anda, masuk ke setting/sandi&keamanan pilih sidik jari',
+          );
+        } else {
+          // Alert.alert('Aktifkan Fingerprint anda, masuk ke setting/sandi&keamanan pilih sidik jari')
+          // test
+          Alert.alert('Err Fingerprint: ', error.name);
+        }
+        console.log('Biometric error', error);
+      });
   };
 
   const sendDataNoImg = () => {
@@ -241,16 +264,16 @@ const AbsenceOff = ({navigation, route}) => {
         // 'Content-Type': 'multipart/form-data',
       },
       [
-        {name: 'id', data: route.params.id.toString()},
-        {name: 'absence_id', data: route.params.absence_id.toString()},
-        {name: 'type', data: route.params.type.toString()},
-        {name: 'queue', data: route.params.queue.toString()},
-        {name: 'staff_id', data: STAFF_ID.toString()},
-        {name: 'lat', data: form.lat ? form.lat.toString() : ''},
-        {name: 'lng', data: form.lng ? form.lng.toString() : ''},
-        {name: 'status', data: '0'},
-        {name: 'accuracy', data: form.accuracy.toString()},
-        {name: 'distance', data: form.distance.toString()},
+        { name: 'id', data: route.params.id.toString() },
+        { name: 'absence_id', data: route.params.absence_id.toString() },
+        { name: 'type', data: route.params.type.toString() },
+        { name: 'queue', data: route.params.queue.toString() },
+        { name: 'staff_id', data: STAFF_ID.toString() },
+        { name: 'lat', data: form.lat ? form.lat.toString() : '' },
+        { name: 'lng', data: form.lng ? form.lng.toString() : '' },
+        { name: 'status', data: '0' },
+        { name: 'accuracy', data: form.accuracy.toString() },
+        { name: 'distance', data: form.distance.toString() },
       ],
     )
       .then(result => {
@@ -290,16 +313,16 @@ const AbsenceOff = ({navigation, route}) => {
           filename: route.params.image.filename,
           data: route.params.image.base64,
         },
-        {name: 'id', data: route.params.id.toString()},
-        {name: 'absence_id', data: route.params.absence_id.toString()},
-        {name: 'type', data: route.params.type.toString()},
-        {name: 'queue', data: route.params.queue.toString()},
-        {name: 'staff_id', data: STAFF_ID.toString()},
-        {name: 'lat', data: form.lat ? form.lat.toString() : ''},
-        {name: 'lng', data: form.lng ? form.lng.toString() : ''},
-        {name: 'status', data: '0'},
-        {name: 'accuracy', data: form.accuracy.toString()},
-        {name: 'distance', data: form.distance.toString()},
+        { name: 'id', data: route.params.id.toString() },
+        { name: 'absence_id', data: route.params.absence_id.toString() },
+        { name: 'type', data: route.params.type.toString() },
+        { name: 'queue', data: route.params.queue.toString() },
+        { name: 'staff_id', data: STAFF_ID.toString() },
+        { name: 'lat', data: form.lat ? form.lat.toString() : '' },
+        { name: 'lng', data: form.lng ? form.lng.toString() : '' },
+        { name: 'status', data: '0' },
+        { name: 'accuracy', data: form.accuracy.toString() },
+        { name: 'distance', data: form.distance.toString() },
       ],
     )
       .then(result => {
@@ -370,14 +393,14 @@ const AbsenceOff = ({navigation, route}) => {
     );
   } else if (!loading) {
     return (
-      <View style={{flex: 1}}>
+      <View style={{ flex: 1 }}>
         <ScrollView>
-          <View style={{alignItems: 'center'}}>
-            <Text style={[{marginVertical: windowHeight * 0.01}]}>
+          <View style={{ alignItems: 'center' }}>
+            <Text style={[{ marginVertical: windowHeight * 0.01 }]}>
               anda bisa absen mengabaikan radius
             </Text>
 
-            <Text style={[{marginVertical: windowHeight * 0.05, fontSize: 24}]}>
+            <Text style={[{ marginVertical: windowHeight * 0.05, fontSize: 24 }]}>
               Absen
             </Text>
 
@@ -390,49 +413,16 @@ const AbsenceOff = ({navigation, route}) => {
               <View>
                 <TouchableOpacity
                   onPress={() => {
-                    console.log(route.params.type, route.params.image.filename);
+                    console.log(route.params.type, route.params.image?.filename);
                   }}>
-                  {/* <Text>Tesssssx</Text> */}
                 </TouchableOpacity>
+
                 {route.params.type == 'break' ? (
-                  <TouchableOpacity
-                    onPress={() =>
-                      launchCamera(
-                        {
-                          mediaType: 'photo',
-                          includeBase64: true,
-                          maxHeight: 900,
-                          maxWidth: 900,
-                          cameraType: 'back',
-                        },
-                        response => {
-                          console.log('ini respon', response);
-                          if (response.assets) {
-                            let image = response.assets[0];
-                            route.params.image = image;
-                            route.params.image.filename = image.fileName;
-                            route.params.image.uri = image.uri;
-                            setImageUri(image.uri);
-                          }
-                        },
-                      )
-                    }>
-                    {imageUri == '' ? (
-                      <View style={styles.image}>
-                        <Icon
-                          name="camera-retro"
-                          size={windowHeight * 0.08}
-                          color="#000000"
-                        />
-                      </View>
-                    ) : (
-                      <Image
-                        style={styles.image}
-                        source={{uri: imageUri}}
-                        // source={image.uri=='' || image.uri==null ? require('../../../assets/img/ImageFoto.png'): {uri: image.from=='local' ? image.uri : `https://simpletabadmin.ptab-vps-storage.com/` + `${String(image.uri).replace('public/', '')}?time="${new Date()}`}}
-                      />
-                    )}
-                  </TouchableOpacity>
+                  <InlineVisionCamera
+                    route={route}
+                    setImageUri={setImageUri}
+                    imageUri={imageUri}
+                  />                  
                 ) : (
                   <TouchableOpacity
                     onPress={() =>
@@ -462,7 +452,7 @@ const AbsenceOff = ({navigation, route}) => {
                     ) : (
                       <Image
                         style={styles.image}
-                        source={{uri: route.params.image.uri}}
+                        source={{ uri: route.params.image.uri }}
                       />
                     )}
                   </TouchableOpacity>
@@ -470,6 +460,7 @@ const AbsenceOff = ({navigation, route}) => {
                 <Text>Image</Text>
               </View>
             )}
+
 
             {/* untuk gambar end */}
 
@@ -481,7 +472,7 @@ const AbsenceOff = ({navigation, route}) => {
               maxLength={255}
               value={form.memo}
               onChangeText={value =>
-                setForm({...form, memo: value})
+                setForm({ ...form, memo: value })
               }></Textarea>
           </View>
         </ScrollView>
@@ -491,14 +482,14 @@ const AbsenceOff = ({navigation, route}) => {
        Absen
        </Text>
      </TouchableOpacity> */}
-     {console.log('fingerprint params:', route.params.fingerfrint, 'local:', finger)}
+        {console.log('fingerprint params:', route.params.fingerfrint, 'local:', finger)}
         {finger == 'ON' && route.params.fingerfrint == 'ON' && (
           <TouchableOpacity
             style={[styles.btn]}
             onPress={() => {
               authCurrent();
             }}>
-            <Text style={{color: '#FFFFFF', fontSize: 24, fontWeight: 'bold'}}>
+            <Text style={{ color: '#FFFFFF', fontSize: 24, fontWeight: 'bold' }}>
               Absen
             </Text>
           </TouchableOpacity>
@@ -510,7 +501,7 @@ const AbsenceOff = ({navigation, route}) => {
             onPress={() => {
               handleAction();
             }}>
-            <Text style={{color: '#FFFFFF', fontSize: 24, fontWeight: 'bold'}}>
+            <Text style={{ color: '#FFFFFF', fontSize: 24, fontWeight: 'bold' }}>
               Absen
             </Text>
           </TouchableOpacity>
@@ -522,7 +513,7 @@ const AbsenceOff = ({navigation, route}) => {
             onPress={() => {
               handleAction();
             }}>
-            <Text style={{color: '#FFFFFF', fontSize: 24, fontWeight: 'bold'}}>
+            <Text style={{ color: '#FFFFFF', fontSize: 24, fontWeight: 'bold' }}>
               Absen
             </Text>
           </TouchableOpacity>

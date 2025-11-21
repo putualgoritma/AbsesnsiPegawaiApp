@@ -1,4 +1,4 @@
-package com.absesnsipegawaiapp
+package com.perumdatab.absence
 
 import android.app.Application
 import com.facebook.react.PackageList

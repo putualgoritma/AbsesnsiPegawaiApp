@@ -1,5 +1,5 @@
-import {Alert, Platform, View} from 'react-native';
-import {check, request, PERMISSIONS, RESULTS} from 'react-native-permissions';
+import { Alert, Platform, View } from 'react-native';
+import { check, request, PERMISSIONS, RESULTS } from 'react-native-permissions';
 import ReactNativeBiometrics from 'react-native-biometrics';
 import Geolocation from '@react-native-community/geolocation';
 import {
@@ -85,7 +85,7 @@ const permissionLocation = async () => {
 };
 
 const checkGps = async accuracy => {
-  
+
   console.log('accuracy', accuracy);
   const opt = {
     // enableHighAccuracy: accuracy,
@@ -104,12 +104,12 @@ const checkGps = async accuracy => {
     const position = await getCurrentPosition();
     //setLoading(false);
     console.log('GPSSS : ', position.coords);
-    return {status: true, data: position.coords};
+    return { status: true, data: position.coords };
   } catch (err) {
     console.log('errrggggg', err);
     // Alert.alert('GPS', 'GPS mati, tolong hidupkan GPS!');
     //setLoading(false);
-    return {status: false, data: null};
+    return { status: false, data: null };
   }
 };
 
@@ -119,33 +119,36 @@ export const checkFingerprint = async () => {
 
     if (!available) {
       Alert.alert(
-        'Fingerprint tidak tersedia',
-        'Perangkat Anda tidak memiliki sensor sidik jari atau belum diaktifkan.',
+        'HP tidak support fingerprint',
+        'Konfirmasi ke admin untuk menonaktifkan fitur fingerprint *abaikan jika sudah konfirmasi ke admin',
       );
-      return false;
-    }
-
-    console.log('Biometry type:', biometryType);
-
-    const { success } = await rnBiometrics.simplePrompt({
-      promptMessage: 'Verifikasi sidik jari untuk melanjutkan',
-      cancelButtonText: 'Batal',
-    });
-
-    if (success) {
-      console.log('Fingerprint verified successfully');
       return true;
-    } else {
-      Alert.alert('Verifikasi dibatalkan');
-      return false;
     }
+
+    return true;
+    // console.log('Biometry type:', biometryType);
+
+    // const { success } = await rnBiometrics.simplePrompt({
+    //   promptMessage: 'Verifikasi sidik jari untuk melanjutkan',
+    //   cancelButtonText: 'Batal',
+    // });
+
+    // if (success) {
+    //   console.log('Fingerprint verified successfully');
+    //   return true;
+    // } else {
+    //   Alert.alert('Verifikasi dibatalkan');
+    //   return false;
+    // }
   } catch (error) {
-    if (error.name === 'UserCancel') {
-      Alert.alert('Verifikasi dibatalkan oleh pengguna');
-    } else {
-      Alert.alert('Fingerprint Error', error.message || 'Fingerprint gagal!');
-    }
-    return false;
+    Alert.alert('Fingerprint err', 'Fingerprint tidak jalan!');
+    return true;
+    // if (error.name === 'UserCancel') {
+    //   Alert.alert('Verifikasi dibatalkan oleh pengguna');
+    // } else {
+    //   Alert.alert('Fingerprint Error', error.message || 'Fingerprint gagal!');
+    // }
+    // return false;
   }
 };
 
@@ -153,7 +156,7 @@ const fakeGps = async () => {
   console.log('Fake GPS');
   // return true;
   await isMockingLocation()
-    .then(({isLocationMocked}) => {
+    .then(({ isLocationMocked }) => {
       if (isLocationMocked === true) {
         // Alert.alert('gps palsu');
         // console.log('fake');

@@ -1,5 +1,5 @@
 // 'use strict';
-import React, { useRef } from 'react';
+import React, { useRef, useMemo } from 'react';
 import { useEffect, useState } from 'react';
 import {
   Platform,
@@ -8,10 +8,11 @@ import {
   TouchableOpacity,
   View,
   PermissionsAndroid,
+  Dimensions,
 } from 'react-native';
 import ImageResizer from 'react-native-image-resizer';
 import RNFetchBlob from 'react-native-blob-util';
-import { Camera, useCameraDevices } from 'react-native-vision-camera';
+import { Camera, useCameraDevices, useCameraFormat } from 'react-native-vision-camera';
 
 const CamDect = ({ navigation, route }) => {
   const [hasPermission, setHasPermission] = useState(false);
@@ -27,10 +28,10 @@ const CamDect = ({ navigation, route }) => {
   });
   const [btnAble, setBtinAble] = useState(false);
   const devices = useCameraDevices();
-  const device = devices?.front ?? Object.values(devices)[1];
+  const device = devices?.front || Object.values(devices).find(d => d.position === 'front');
   const camera = useRef(null);
 
-  async function requestPermission() {
+  async function requestPermissionOff() {
     try {
       const cameraPermission = await Camera.requestCameraPermission();
       const microphonePermission = await Camera.requestMicrophonePermission();
@@ -44,6 +45,30 @@ const CamDect = ({ navigation, route }) => {
             : PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
         );
       }
+
+      const granted =
+        (cameraPermission === 'authorized' || cameraPermission === 'granted') &&
+        (microphonePermission === 'authorized' || microphonePermission === 'granted');
+
+      setHasPermission(granted);
+      return granted;
+    } catch (error) {
+      console.error('Permission error:', error);
+      return false;
+    }
+  }
+
+  async function requestPermission() {
+    try {
+      // Request only camera and microphone permissions
+      const cameraPermission = await Camera.requestCameraPermission();
+      const microphonePermission = await Camera.requestMicrophonePermission();
+
+      console.log('Camera permission:', cameraPermission);
+      console.log('Microphone permission:', microphonePermission);
+
+      // 🚫 Removed READ_EXTERNAL_STORAGE / READ_MEDIA_IMAGES
+      // so user cannot open or access gallery
 
       const granted =
         (cameraPermission === 'authorized' || cameraPermission === 'granted') &&
@@ -87,72 +112,31 @@ const CamDect = ({ navigation, route }) => {
   }, [devices]);
 
   const takePicture = async () => {
-    if (camera.current == null) return;
-
     try {
-      const d = new Date();
-      const nm = form.id + d.getHours() + d.getMinutes() + d.getSeconds();
-      console.log('form:', form);
-
-      // Take photo using Vision Camera
+      if (!camera.current) return;
       const photo = await camera.current.takePhoto({
-        flash: device?.hasFlash ? 'on' : 'off',
+        flash: 'off',
         qualityPrioritization: 'balanced',
+        skipMetadata: false,
       });
 
-      console.log('Photo captured:', photo.path);
       const uri = photo.path.startsWith('file://') ? photo.path : `file://${photo.path}`;
 
-      // Resize the image (same as before)
-      const resized = await ImageResizer.createResizedImage(
-        uri,
-        900,
-        900,
-        'JPEG',
-        100,
-        0,
-        undefined,
-        false,
-        {},
-      );
-
-      // Convert resized image to base64
-      const base64data = await RNFetchBlob.fs.readFile(resized.path, 'base64');
-
-      const gambar = {
-        uri: resized.uri,
-        base64: base64data,
-        filename: `${route.params.absence_id}${nm}`,
-      };
-
-      //console.log('Final image:', gambar);
-
-      // Navigate to next screen with all original route params
+      // Normal portrait path
+      const base64data = await RNFetchBlob.fs.readFile(uri.replace('file://', ''), 'base64');
       navigation.navigate(route.params.link, {
-        highAccuracy: route.params.highAccuracy,
-        lat: route.params.lat,
-        lng: route.params.lng,
-        radius: route.params.radius,
-        id: route.params.id,
-        queue: route.params.queue,
-        absence_id: route.params.absence_id,
-        type: route.params.type,
-        image: gambar,
-        absence_request_id: route.params.absence_request_id,
-        expired_date: route.params.expired_date,
-        absence_category_id: route.params.absence_category_id,
-        absence_category_id_end: route.params.absence_category_id_end,
-        fingerfrint: route.params.fingerfrint,
-        selfie: route.params.selfie,
+        ...route.params,
+        image: { uri, base64: base64data, filename: `img-${Date.now()}` },
       });
-
-      //setLoading1(false);
-    } catch (err) {
-      console.error('Error capturing image:', err);
-      alert('Failed', 'Failed to capture image.');
-      //setLoading1(false);
+    } catch (e) {
+      console.error('takePhoto error', e);
     }
   };
+
+  const format = useCameraFormat(device, [
+    { photoResolution: { width: 675, height: 900 } },
+  ]);
+
 
   if (!hasPermission) {
     return (
@@ -179,19 +163,29 @@ const CamDect = ({ navigation, route }) => {
           device={device}
           isActive={true}
           photo={true}
+          format={format}
+          resizeMode="cover"
         />
 
-        <View style={{ flex: 0, flexDirection: 'row', justifyContent: 'center' }}>
+        {/* Overlay your button above camera */}
+        <View
+          style={{
+            position: 'absolute',
+            bottom: 60,
+            width: '100%',
+            alignItems: 'center',
+          }}>
           <TouchableOpacity
             onPress={takePicture}
             style={btnAble ? styles.captureDisabled : styles.capture}
             disabled={btnAble}>
-            <Text style={{ fontSize: 14 }}>Ambil</Text>
+            <Text style={{ fontSize: 14, color: '#000' }}>Ambil</Text>
           </TouchableOpacity>
         </View>
       </View>
     );
-  } else {
+  }
+  else {
     return (
       <View style={styles.container}>
         <Camera
@@ -200,18 +194,28 @@ const CamDect = ({ navigation, route }) => {
           device={device}
           isActive={true}
           photo={true}
+          format={format}
+          resizeMode="cover"
         />
 
-        <View style={{ flex: 0, flexDirection: 'row', justifyContent: 'center' }}>
+        {/* Overlay the button above camera */}
+        <View
+          style={{
+            position: 'absolute',
+            bottom: 60,
+            width: '100%',
+            alignItems: 'center',
+          }}>
           <TouchableOpacity
             onPress={takePicture}
             style={styles.capture}>
-            <Text style={{ fontSize: 14 }}> Ambil</Text>
+            <Text style={{ fontSize: 14, color: '#000' }}>Ambil</Text>
           </TouchableOpacity>
         </View>
       </View>
     );
   }
+
 };
 
 export default CamDect;
@@ -229,7 +233,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'flex-end',
     alignItems: 'center',
-    // backgroundColor: colors.profileTabSelectedColor
   },
   capture: {
     flex: 0,
