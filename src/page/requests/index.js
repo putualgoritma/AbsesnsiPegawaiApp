@@ -4,12 +4,14 @@ import {
   StyleSheet,
   Text,
   View,
+  useColorScheme
 } from 'react-native';
 import React from 'react';
 import {useEffect} from 'react';
 import myFunctions from '../../functions';
 
 const Requests = ({navigation, route}) => {
+  const scheme = useColorScheme();
   useEffect(() => {
     // if(isFocused){
     console.log('test');
@@ -23,7 +25,7 @@ const Requests = ({navigation, route}) => {
         style={{
           fontSize: 24,
           fontWeight: 'bold',
-          color: '#000000',
+          color: scheme === 'dark' ? '#000000' : '#000000',
           marginBottom: windowHeight * 0.01,
           marginBottom: windowHeight * 0.02,
           marginLeft: 'auto',
@@ -36,28 +38,28 @@ const Requests = ({navigation, route}) => {
         onPress={() => {
           navigation.navigate('RPermit');
         }}>
-        <Text style={styles.btnText}>Permisi</Text>
+        <Text style={[styles.btnText,{color: scheme === 'dark' ? '#000000' : '#000000'}]}>Permisi</Text>
       </TouchableOpacity>
       <TouchableOpacity
         style={[styles.listMenu, {backgroundColor: '#443cf4'}]}
         onPress={() => {
           navigation.navigate('RDuty');
         }}>
-        <Text style={styles.btnText}>Dinas Dalam Kota</Text>
+        <Text style={[styles.btnText,{color: scheme === 'dark' ? '#000000' : '#000000'}]}>Dinas Dalam Kota</Text>
       </TouchableOpacity>
       <TouchableOpacity
         style={[styles.listMenu, {backgroundColor: '#5cdb5c'}]}
         onPress={() => {
           navigation.navigate('RDutyOut');
         }}>
-        <Text style={styles.btnText}>Dinas Luar Kota</Text>
+        <Text style={[styles.btnText,{color: scheme === 'dark' ? '#000000' : '#000000'}]}>Dinas Luar Kota</Text>
       </TouchableOpacity>
       <TouchableOpacity
         style={[styles.listMenu, {backgroundColor: '#e6bc15'}]}
         onPress={() => {
           navigation.navigate('Permission');
         }}>
-        <Text style={styles.btnText}>Izin</Text>
+        <Text style={[styles.btnText,{color: scheme === 'dark' ? '#000000' : '#000000'}]}>Izin</Text>
       </TouchableOpacity>
 
       <TouchableOpacity
@@ -65,21 +67,21 @@ const Requests = ({navigation, route}) => {
         onPress={() => {
           navigation.navigate('ROvertime');
         }}>
-        <Text style={styles.btnText}>Lembur</Text>
+        <Text style={[styles.btnText,{color: scheme === 'dark' ? '#000000' : '#000000'}]}>Lembur</Text>
       </TouchableOpacity>
       <TouchableOpacity
         style={[styles.listMenu, {backgroundColor: '#8cdcf0'}]}
         onPress={() => {
           navigation.navigate('Leave');
         }}>
-        <Text style={styles.btnText}>Cuti</Text>
+        <Text style={[styles.btnText,{color: scheme === 'dark' ? '#000000' : '#000000'}]}>Cuti</Text>
       </TouchableOpacity>
       <TouchableOpacity
         style={[styles.listMenu, {backgroundColor: '#4169E1'}]}
         onPress={() => {
           navigation.navigate('AbsenceOut');
         }}>
-        <Text style={styles.btnText}>Absen Diluar</Text>
+        <Text style={[styles.btnText,{color: scheme === 'dark' ? '#000000' : '#000000'}]}>Absen Diluar</Text>
       </TouchableOpacity>
 
       <TouchableOpacity
@@ -87,7 +89,7 @@ const Requests = ({navigation, route}) => {
         onPress={() => {
           navigation.navigate('AdditionalTime');
         }}>
-        <Text style={styles.btnText}>Additional Time</Text>
+        <Text style={[styles.btnText,{color: scheme === 'dark' ? '#000000' : '#000000'}]}>Additional Time</Text>
       </TouchableOpacity>
 
       {/* <TouchableOpacity
@@ -103,7 +105,7 @@ const Requests = ({navigation, route}) => {
         onPress={() => {
           navigation.navigate('Location');
         }}>
-        <Text style={styles.btnText}>Titik Lokasi Absen</Text>
+        <Text style={[styles.btnText,{color: scheme === 'dark' ? '#000000' : '#000000'}]}>Titik Lokasi Absen</Text>
       </TouchableOpacity>
 
       <TouchableOpacity
@@ -111,7 +113,7 @@ const Requests = ({navigation, route}) => {
         onPress={() => {
           navigation.navigate('Dispense');
         }}>
-        <Text style={styles.btnText}>Dispensasi</Text>
+        <Text style={[styles.btnText,{color: scheme === 'dark' ? '#000000' : '#000000'}]}>Dispensasi</Text>
       </TouchableOpacity>
     </View>
   );

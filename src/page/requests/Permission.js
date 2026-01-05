@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Dimensions,
   Alert,
+  useColorScheme
 } from 'react-native';
 import React from 'react';
 import { useState } from 'react';
@@ -39,6 +40,7 @@ const Permission = ({ navigation }) => {
   const [isDatePickerVisible2, setDatePickerVisibility2] = useState(false);
   const [loadingList, setLoadingList] = useState(false);
   const [todos, setTodos] = useState([]);
+  const scheme = useColorScheme();
   const [form, setForm] = useState({
     staff_id: STAFF_ID,
     type: '',    
@@ -261,12 +263,12 @@ const Permission = ({ navigation }) => {
               marginLeft: 'auto',
               fontWeight: 'bold',
               fontSize: 20,
-              color: '#000000',
+              color: scheme === 'dark' ? '#000000' : '#000000'
             }}>
             Input Data Izin
           </Text>
 
-          <Text style={styles.title}>
+          <Text style={[styles.title,{color: scheme === 'dark' ? '#000000' : '#000000'}]}>
             Pilih Keterangan<Text style={{ color: '#ff0000' }}>*</Text>
           </Text>
 
@@ -313,11 +315,11 @@ const Permission = ({ navigation }) => {
             />
           </View>
 
-          <Text style={styles.title}>
+          <Text style={[styles.title,{color: scheme === 'dark' ? '#000000' : '#000000'}]}>
             Tanggal Mulai<Text style={{ color: '#ff0000' }}>*</Text>
           </Text>
           <TouchableOpacity style={styles.input} onPress={showDatePicker}>
-            <Text style={styles.text}>{date}</Text>
+            <Text style={[styles.text,{color: scheme === 'dark' ? '#000000' : '#000000'}]}>{date}</Text>
           </TouchableOpacity>
           <DateTimePickerModal
             isVisible={isDatePickerVisible}
@@ -325,11 +327,11 @@ const Permission = ({ navigation }) => {
             onConfirm={handleConfirm}
             onCancel={hideDatePicker}
           />
-          <Text style={styles.title}>
+          <Text style={[styles.title,{color: scheme === 'dark' ? '#000000' : '#000000'}]}>
             Tanggal Berakhir<Text style={{ color: '#ff0000' }}>*</Text>
           </Text>
           <TouchableOpacity style={styles.input} onPress={showDatePicker2}>
-            <Text style={styles.text}>{date2}</Text>
+            <Text style={[styles.text,{color: scheme === 'dark' ? '#000000' : '#000000'}]}>{date2}</Text>
           </TouchableOpacity>
           <DateTimePickerModal
             isVisible={isDatePickerVisible2}
@@ -337,10 +339,10 @@ const Permission = ({ navigation }) => {
             onConfirm={handleConfirm2}
             onCancel={hideDatePicker2}
           />
-          <Text style={styles.title}>Memo<Text style={{ color: '#ff0000' }}>*</Text></Text>
+          <Text style={[styles.title,{color: scheme === 'dark' ? '#000000' : '#000000'}]}>Memo<Text style={{ color: '#ff0000' }}>*</Text></Text>
           <Textarea
             containerStyle={styles.textareaContainer}
-            style={styles.textarea}
+            style={[styles.textarea,{color: scheme === 'dark' ? '#000000' : '#000000'}]}
             placeholder="Mohon isi memo dengan jelas (uraian kegiatan & lokasi kegiatan)"
             editable={true}
             maxLength={255}
@@ -349,7 +351,7 @@ const Permission = ({ navigation }) => {
               setForm({ ...form, description: value })
             }></Textarea>
 
-          <Text style={styles.title}>Bukti</Text>
+          <Text style={[styles.title,{color: scheme === 'dark' ? '#000000' : '#000000'}]}>Bukti</Text>
           <TouchableOpacity
             onPress={() =>
               launchCamera(
@@ -392,7 +394,7 @@ const Permission = ({ navigation }) => {
           onPress={() => {
             handleAction();
           }}>
-          <Text style={{ color: '#FFFFFF', fontSize: 24, fontWeight: 'bold' }}>
+          <Text style={{ color: scheme === 'dark' ? '#000000' : '#000000', fontSize: 24, fontWeight: 'bold' }}>
             Ajukan
           </Text>
         </TouchableOpacity>

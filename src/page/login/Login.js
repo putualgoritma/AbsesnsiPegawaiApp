@@ -25,6 +25,7 @@ import {
   BackHandler,
   Alert,
   StatusBar,
+  useColorScheme
 } from 'react-native';
 import {OneSignal} from 'react-native-onesignal';
 import { useDispatch } from 'react-redux';
@@ -51,6 +52,7 @@ const Login = ({ navigation }) => {
   const [visible, setVisible] = useState(true);
   const isFocused = useIsFocused();
   const dispatch = useDispatch();
+  const scheme = useColorScheme();
   const [form, setForm] = useState({
     email: null,
     password: null,
@@ -281,15 +283,15 @@ const Login = ({ navigation }) => {
       {loading && <ScreenLoading />}
       {!loading && (
         <View style={[{ alignItems: 'center' }, styles.imgBg]}>
-          <Text style={styles.labelTitle}></Text>
-          <Text style={styles.label3white}></Text>
+          <Text style={[styles.labelTitle,{color: scheme === 'dark' ? '#000000' : '#000000'}]}></Text>
+          <Text style={[styles.label3white,{color: scheme === 'dark' ? '#000000' : '#000000'}]}></Text>
 
-          <Text style={[styles.label1, { color: '#FFFFFF' }]}>Login</Text>
+          <Text style={[styles.label1, { color: scheme === 'dark' ? '#000000' : '#000000' }]}>Login</Text>
           <View style={styles.floatingScreen}>
             <View>
               <Image source={logo512} style={styles.images} />
             </View>
-            <Text style={styles.label3}></Text>
+            <Text style={[styles.label3,{color: scheme === 'dark' ? '#000000' : '#000000'}]}></Text>
 
             <View
               style={{
@@ -299,12 +301,12 @@ const Login = ({ navigation }) => {
               }}>
               <Icon name="user" size={windowHeight * 0.04} color="#000000" />
               <TextInput
-                style={styles.formInput}
+                style={[styles.formInput,{color: scheme === 'dark' ? '#000000' : '#000000'}]}
                 placeholder="Masukan Email"
                 onChangeText={item => setForm({ ...form, email: item })}
               />
             </View>
-            <Text style={styles.label3}></Text>
+            <Text style={[styles.label3,{color: scheme === 'dark' ? '#000000' : '#000000'}]}></Text>
 
             <View
               style={{
@@ -314,7 +316,7 @@ const Login = ({ navigation }) => {
               }}>
               <Icon name="lock" size={windowHeight * 0.04} color="#000000" />
               <TextInput
-                style={styles.formInput}
+                style={[styles.formInput,{color: scheme === 'dark' ? '#000000' : '#000000'}]}
                 placeholder="Masukan Password"
                 secureTextEntry={visible}
                 onChangeText={item => setForm({ ...form, password: item })}
@@ -338,7 +340,7 @@ const Login = ({ navigation }) => {
             <TouchableOpacity
               style={styles.button}
               onPress={() => handleAction()}>
-              <Text style={[styles.label2, { color: '#FFFFFF' }]}>Masuk</Text>
+              <Text style={[styles.label2, { color: scheme === 'dark' ? '#000000' : '#000000' }]}>Masuk</Text>
             </TouchableOpacity>
           </View>
         </View>

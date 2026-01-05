@@ -3,11 +3,12 @@ import { useSelector } from 'react-redux';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import API from '../../service';
 import ScreenLoading from '../loading/ScreenLoading';
-import { Alert, PermissionsAndroid, ScrollView, StyleSheet, View, Image, Text,Dimensions, TouchableOpacity } from 'react-native';
+import { Alert, PermissionsAndroid, ScrollView, StyleSheet, View, Image, Text,Dimensions, TouchableOpacity, useColorScheme } from 'react-native';
 
 const Logout = ({navigation}) => {
   const TOKEN = useSelector((state) => state.TokenReducer);
       const USER = useSelector ((state) => state.UserReducer);
+      const scheme = useColorScheme();
   const [loading, setLoading] = useState(false)
   const logout = () => {
       setLoading(true)
@@ -37,13 +38,13 @@ const Logout = ({navigation}) => {
       }
 {!loading &&
 <View>
-  <Text style={{ marginTop : Dimensions.get('window').height*0.3, textAlign : 'center', fontSize : 30, color : "#000000" }}>Yakin Melakukan Logout</Text>
+  <Text style={{ marginTop : Dimensions.get('window').height*0.3, textAlign : 'center', fontSize : 30, color: scheme === 'dark' ? '#000000' : '#000000' }}>Yakin Melakukan Logout</Text>
   <View style={{ flexDirection : "row" }}>
 <TouchableOpacity style={styles.buttonY} onPress={()=> logout()}>
-   <Text style={styles.label2white}>Ya</Text>
+   <Text style={[styles.label2white, {color: scheme === 'dark' ? '#000000' : '#000000'}]}>Ya</Text>
  </TouchableOpacity>
  <TouchableOpacity style={styles.button} onPress={()=> navigation.navigate('Home')}>
-   <Text style={styles.label2white}>Tidak</Text>
+   <Text style={[styles.label2white,{color: scheme === 'dark' ? '#000000' : '#000000'}]}>Tidak</Text>
  </TouchableOpacity>
 </View>
 </View>

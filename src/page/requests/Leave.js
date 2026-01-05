@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Dimensions,
   Alert,
+  useColorScheme
 } from 'react-native';
 import React from 'react';
 import {useState} from 'react';
@@ -36,6 +37,7 @@ const Leave = ({navigation}) => {
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
   const [isDatePickerVisible2, setDatePickerVisibility2] = useState(false);
   const [todos, setTodos] = useState([{id:'yearly',name:'Cuti Tahunan'},{id:'birth',name:'Cuti Melahirkan'},{id:'sick',name:'Cuti Sakit'}]);
+  const scheme = useColorScheme();
   const [form, setForm] = useState({
     staff_id: STAFF_ID,
     description: '',
@@ -193,12 +195,12 @@ const Leave = ({navigation}) => {
               marginLeft: 'auto',
               fontWeight: 'bold',
               fontSize: 20,
-              color: '#000000',
+              color: scheme === 'dark' ? '#000000' : '#000000'
             }}>
             Input Data Cuti
           </Text>
 
-            <Text style={styles.title}>
+            <Text style={[styles.title,{color: scheme === 'dark' ? '#000000' : '#000000'}]}>
                         Pilih Keterangan<Text style={{color: '#ff0000'}}>*</Text>
                       </Text>
             
@@ -245,11 +247,11 @@ const Leave = ({navigation}) => {
                         />
                       </View>
 
-          <Text style={styles.title}>
+          <Text style={[styles.title,{color: scheme === 'dark' ? '#000000' : '#000000'}]}>
             Tanggal Mulai<Text style={{color: '#ff0000'}}>*</Text>
           </Text>
           <TouchableOpacity style={styles.input} onPress={showDatePicker}>
-            <Text style={styles.text}>{date}</Text>
+            <Text style={[styles.text,{color: scheme === 'dark' ? '#000000' : '#000000'}]}>{date}</Text>
           </TouchableOpacity>
           <DateTimePickerModal
             isVisible={isDatePickerVisible}
@@ -259,11 +261,11 @@ const Leave = ({navigation}) => {
           />
           {form.type !== 'sick' && (
           <>
-          <Text style={styles.title}>
+          <Text style={[styles.title,{color: scheme === 'dark' ? '#000000' : '#000000'}]}>
             Tanggal Berakhir<Text style={{color: '#ff0000'}}>*</Text>
           </Text>
           <TouchableOpacity style={styles.input} onPress={showDatePicker2}>
-            <Text style={styles.text}>{date2}</Text>
+            <Text style={[styles.text,{color: scheme === 'dark' ? '#000000' : '#000000'}]}>{date2}</Text>
           </TouchableOpacity>
           <DateTimePickerModal
             isVisible={isDatePickerVisible2}
@@ -273,10 +275,10 @@ const Leave = ({navigation}) => {
           />
           </>
           )}
-          <Text style={styles.title}>Memo<Text style={{color: '#ff0000'}}>*</Text></Text>
+          <Text style={[styles.title,{color: scheme === 'dark' ? '#000000' : '#000000'}]}>Memo<Text style={{color: '#ff0000'}}>*</Text></Text>
           <Textarea
             containerStyle={styles.textareaContainer}
-            style={styles.textarea}
+            style={[styles.textarea,{color: scheme === 'dark' ? '#000000' : '#000000'}]}
             placeholder="Mohon isi memo dengan jelas (uraian kegiatan & lokasi kegiatan)"
             editable={true}
             maxLength={255}
@@ -285,7 +287,7 @@ const Leave = ({navigation}) => {
               setForm({...form, description: value})
             }></Textarea>
 
-          <Text style={styles.title}>Bukti Pengajuan</Text>
+          <Text style={[styles.title,{color: scheme === 'dark' ? '#000000' : '#000000'}]}>Bukti Pengajuan</Text>
           <TouchableOpacity
             onPress={() =>
               launchCamera(
@@ -322,7 +324,7 @@ const Leave = ({navigation}) => {
             )}
           </TouchableOpacity>
 
-          <Text style={styles.title}>Bukti Persetujuan</Text>
+          <Text style={[styles.title,{color: scheme === 'dark' ? '#000000' : '#000000'}]}>Bukti Persetujuan</Text>
           <TouchableOpacity
             onPress={() =>
               launchCamera(
@@ -365,7 +367,7 @@ const Leave = ({navigation}) => {
           onPress={() => {
             handleAction();
           }}>
-          <Text style={{color: '#FFFFFF', fontSize: 24, fontWeight: 'bold'}}>
+          <Text style={{color: scheme === 'dark' ? '#000000' : '#000000', fontSize: 24, fontWeight: 'bold'}}>
             Ajukan
           </Text>
         </TouchableOpacity>

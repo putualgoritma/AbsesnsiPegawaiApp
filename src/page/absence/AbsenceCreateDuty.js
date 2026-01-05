@@ -128,63 +128,83 @@ const AbsenceCreateExtra = ({navigation, route}) => {
   };
 
   useEffect(() => {
-    console.log(route.params);
-    setLoading(true);
-    fakeGps();
-    Promise.all([
-      myFunctions.checkFingerprint(),
-      myFunctions.permissionCamera(),
-      myFunctions.permissionLocation(),
-    ])
-      .then(res => {
-        setLoading(true);
-        //if fingerprint off
-        if (!res[0]) {
-          setFinger('OFF');
-        }
-        //if perrmission loc
-        if (res[2]) {
-          //check gps
-          myFunctions
-            .checkGps(false)
-            .then(function (gps) {
-              if (!gps.status) {
-                setLoading(false);
-                console.log('checkGps useeffect', 'false');
-              } else {
-                console.log(
-                  'posisiisii ',
-                  gps.data.latitude,
-                  gps.data.longitude,
-                );
-                setForm({
-                  ...form,
-                  lat: gps.data.latitude,
-                  lng: gps.data.longitude,
-                  accuracy: gps.data.accuracy,
-                });
-                setLoading(false);
-              }
-            })
-            .catch(error => {
-              console.log('err checkGps useeffect', error.message);
-              setLoading(false);
-            });
-        } else {
-          Alert.alert(
-            'Location Permission',
-            'Location Permission tidak diizinkan.',
-          );
-          setLoading(false);
-        }
-      })
-      .catch(e => {
-        console.log('err promise all', e);
-        setLoading(false);
-      });
+  console.log(route.params);
+  let isMounted = true;
+  setLoading(true);
 
-    setLoading(false);
-  }, []);
+  // --- 1. FAKE GPS CHECK (KONSISTEN)
+  myFunctions.fakeGps()
+    .then(isFake => {
+      if (!isMounted) return;
+      setfakeGpsV(isFake ? 2 : 3); // 2 = fake, 3 = not fake
+    })
+    .catch(err => console.log("fakeGps error:", err));
+
+  // --- 2. PERMISSIONS + FINGERPRINT
+  Promise.all([
+    myFunctions.checkFingerprint(),
+    myFunctions.permissionCamera(),
+    myFunctions.permissionLocation(),
+  ])
+    .then(([fingerOK, cameraOK, locationOK]) => {
+
+      if (!isMounted) return;
+
+      console.log("Permission Results:", { fingerOK, cameraOK, locationOK });
+
+      // Fingerprint OFF
+      if (!fingerOK){
+                Alert.alert(
+                  "Fingerprint Permission",
+                  "Fingerprint Error."
+                );
+                // setFinger("OFF");
+              }
+
+      // LOCATION PERMISSION OK?
+      if (locationOK) {
+
+        // --- 3. GET GPS COORDINATE
+        myFunctions.checkGps(false)
+          .then(gps => {
+            if (!isMounted) return;
+
+            if (!gps.status) {
+              console.log("checkGps useeffect", "false");
+              setLoading(false);
+              return;
+            }
+
+            console.log("GPS:", gps.data.latitude, gps.data.longitude);
+
+            setForm(prev => ({
+              ...prev,
+              lat: gps.data.latitude,
+              lng: gps.data.longitude,
+              accuracy: gps.data.accuracy
+            }));
+
+            setLoading(false);
+          })
+          .catch(error => {
+            console.log("err checkGps useeffect", error.message);
+            setLoading(false);
+          });
+
+      } else {
+        Alert.alert("Location Permission", "Location Permission tidak diizinkan.");
+        setLoading(false);
+      }
+    })
+    .catch(e => {
+      console.log("err promise all", e);
+      setLoading(false);
+    });
+
+  return () => {
+    isMounted = false;
+  };
+}, []);
 
   const authCurrent = () => {
     rnBiometrics.simplePrompt({ promptMessage: 'Scan your fingerprint' })
@@ -458,6 +478,10 @@ const AbsenceCreateExtra = ({navigation, route}) => {
       </View>
     );
   } else {
+    // Alert.alert(
+    //     "Peringatan Loading",
+    //     `loading: ${loading}` + ` fakeGpsV: ${fakeGpsV}` + ` jarak: ${jarak}`
+    //   );
     return (
       <View>
         <ScreenLoading />

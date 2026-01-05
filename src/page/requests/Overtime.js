@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Dimensions,
   Alert,
+  useColorScheme
 } from 'react-native';
 import React from 'react';
 import {useState} from 'react';
@@ -37,6 +38,7 @@ const Overtime = ({navigation}) => {
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
   const [mode, setMode] = useState('date');
   const [loading, setLoading] = useState(true);
+  const scheme = useColorScheme();
   const [form, setForm] = useState({
     staff_id: STAFF_ID,
     description: '',
@@ -155,7 +157,7 @@ const Overtime = ({navigation}) => {
               marginLeft: 'auto',
               fontWeight: 'bold',
               fontSize: 20,
-              color: '#000000',
+              color: scheme === 'dark' ? '#000000' : '#000000'
             }}>
             Input Data Lembur
           </Text>
@@ -167,7 +169,7 @@ const Overtime = ({navigation}) => {
                 status={form.type === 'in' ? 'checked' : 'unchecked'}
                 onPress={() => setForm({...form, type: 'in'})}
               />
-              <Text style={{marginTop: 10}}>Dalam Kantor</Text>
+              <Text style={{marginTop: 10, color: scheme === 'dark' ? '#000000' : '#000000'}}>Dalam Kantor</Text>
             </View>
             <View style={{flexDirection: 'row'}}>
               <RadioButton
@@ -175,15 +177,15 @@ const Overtime = ({navigation}) => {
                 status={form.type === 'outside' ? 'checked' : 'unchecked'}
                 onPress={() => setForm({...form, type: 'outside'})}
               />
-              <Text style={{marginTop: 10}}>Luar Kantor</Text>
+              <Text style={{marginTop: 10, color: scheme === 'dark' ? '#000000' : '#000000'}}>Luar Kantor</Text>
             </View>
           </View>
 
-          <Text style={styles.title}>
+          <Text style={[styles.title,{color: scheme === 'dark' ? '#000000' : '#000000'}]}>
             Tanggal<Text style={{color: '#ff0000'}}>*</Text>
           </Text>
           <TouchableOpacity style={styles.input} onPress={showDatePicker}>
-            <Text style={styles.text}>{date}</Text>
+            <Text style={[styles.title,{color: scheme === 'dark' ? '#000000' : '#000000'}]}>{date}</Text>
           </TouchableOpacity>
           <DateTimePickerModal
             isVisible={isDatePickerVisible}
@@ -193,7 +195,7 @@ const Overtime = ({navigation}) => {
           />
 
           <Text>
-            Jam Mulai<Text style={{color: '#ff0000'}}>*</Text>
+            Jam Mulai<Text style={{color: scheme === 'dark' ? '#000000' : '#000000'}}>*</Text>
           </Text>
           <TouchableOpacity
             style={styles.input}
@@ -205,14 +207,14 @@ const Overtime = ({navigation}) => {
             <View style={{flexDirection: 'row'}}>
               {/* <FontAwesomeIcon icon={faClock} style={{color:'#FFFFFF'}} size={ 20 } /> */}
               {/* <Distance distanceH={5}/> */}
-              <Text style={styles.text}>{time}</Text>
+              <Text style={[styles.title,{color: scheme === 'dark' ? '#000000' : '#000000'}]}>{time}</Text>
             </View>
           </TouchableOpacity>
 
-          <Text style={styles.title}>Memo<Text style={{color: '#ff0000'}}>*</Text></Text>
+          <Text style={[styles.title,{color: scheme === 'dark' ? '#000000' : '#000000'}]}>Memo<Text style={{color: '#ff0000'}}>*</Text></Text>
           <Textarea
             containerStyle={styles.textareaContainer}
-            style={styles.textarea}
+            style={[styles.textarea,{color: scheme === 'dark' ? '#000000' : '#000000'}]}
             placeholder="Mohon isi memo dengan jelas (uraian kegiatan & lokasi kegiatan)"
             editable={true}
             maxLength={255}
@@ -238,7 +240,7 @@ const Overtime = ({navigation}) => {
           onPress={() => {
             handleAction();
           }}>
-          <Text style={{color: '#FFFFFF', fontSize: 24, fontWeight: 'bold'}}>
+          <Text style={{color: scheme === 'dark' ? '#000000' : '#000000', fontSize: 24, fontWeight: 'bold'}}>
             Ajukan
           </Text>
         </TouchableOpacity>

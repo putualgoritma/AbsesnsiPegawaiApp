@@ -11,6 +11,7 @@ import {
   ImageBackground,
   Alert,
   Platform,
+  useColorScheme
 } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import Icon from 'react-native-vector-icons/FontAwesome5';
@@ -40,6 +41,7 @@ const Home = ({ navigation }) => {
   const [data2, setData2] = useState({});
   const [loading, setLoading] = useState(true);
   const [fakeGpsV, setfakeGpsV] = useState(0);
+  const scheme = useColorScheme();
 
   const fakeGps = async () => {
       console.log('Fake GPS');
@@ -213,8 +215,8 @@ const Home = ({ navigation }) => {
     );
   } else if (!loading) {
     return (
-      <View style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
-        <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
+      <View style={{ flex: 1, backgroundColor: '#FFFFFF', color: scheme === 'dark' ? '#000000' : '#000000' }}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF', color: scheme === 'dark' ? '#000000' : '#000000' }}>
           <ScrollView
             // style={{ backgroundColor : 'blue'}}
             scrollEnabled={true}
@@ -224,7 +226,7 @@ const Home = ({ navigation }) => {
               <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
             }>
             {/* <Text>{data.staff.type}</Text> */}
-            <View style={{ backgroundColor: '#16D5FF', width: windowWidht * 1 }}>
+            <View style={{ backgroundColor: '#16D5FF', width: windowWidht * 1, color: scheme === 'dark' ? '#000000' : '#000000' }}>
               <View
                 style={{
                   flexDirection: 'row',
@@ -237,7 +239,7 @@ const Home = ({ navigation }) => {
                 <TouchableOpacity
                   onPress={() => navigation.navigate('User', { screen: 'User' })}>
                   <Image
-                    style={styles.iconRadius}
+                    style={[styles.iconRadius,{color: scheme === 'dark' ? '#000000' : '#000000'}]}
                     source={{
                       uri:
                         `https://simpletabadmin.ptab-vps-storage.com` +
@@ -249,6 +251,7 @@ const Home = ({ navigation }) => {
                 <View style={{ marginLeft: windowHeight * 0.01 }}>
                   <Text style={{ color: '#FFFFFF' }}>{USER.name}</Text>
                   <Text style={{ color: '#FFFFFF' }}>{USER.phone}</Text>
+                  <Text style={{ color: '#FFFFFF' }}>V-15-12-2025 V1</Text>                  
                 </View>
                 <TouchableOpacity
                   style={{ marginLeft: 'auto', marginTop: windowHeight * 0.01 }}
@@ -327,7 +330,7 @@ const Home = ({ navigation }) => {
                         color="#228200"
                       />
                     </TouchableOpacity>
-                    <Text style={{ textAlign: 'center' }}>Absen</Text>
+                    <Text style={{ textAlign: 'center', color: scheme === 'dark' ? '#000000' : '#000000' }}>Absen</Text>
                   </View>
                   <View style={{ marginLeft: 'auto', marginRight: 'auto' }}>
                     <TouchableOpacity
@@ -339,7 +342,7 @@ const Home = ({ navigation }) => {
                         color="#820085"
                       />
                     </TouchableOpacity>
-                    <Text style={{ textAlign: 'center' }}>Pengajuan</Text>
+                    <Text style={{ textAlign: 'center', color: scheme === 'dark' ? '#000000' : '#000000'}}>Pengajuan</Text>
                   </View>
                   {console.log('sssssddd', data)}
                   <View style={{ marginLeft: 'auto', marginRight: 'auto' }}>
@@ -373,7 +376,7 @@ const Home = ({ navigation }) => {
                       </TouchableOpacity>
                     )}
 
-                    <Text style={{ textAlign: 'center' }}>Jadwal</Text>
+                    <Text style={{ textAlign: 'center', color: scheme === 'dark' ? '#000000' : '#000000' }}>Jadwal</Text>
                   </View>
                   <View style={{ marginLeft: 'auto' }}>
                     <TouchableOpacity
@@ -389,7 +392,7 @@ const Home = ({ navigation }) => {
                         color="#8B0000"
                       />
                     </TouchableOpacity>
-                    <Text style={{ textAlign: 'center' }}>Histori</Text>
+                    <Text style={{ textAlign: 'center', color: scheme === 'dark' ? '#000000' : '#000000' }}>Histori</Text>
                   </View>
                 </View>
                 {/* row 2 */}
@@ -411,7 +414,7 @@ const Home = ({ navigation }) => {
                         color="#820085"
                       />
                     </TouchableOpacity>
-                    <Text style={{ textAlign: 'center' }}>Libur</Text>
+                    <Text style={{ textAlign: 'center', color: scheme === 'dark' ? '#000000' : '#000000' }}>Libur</Text>
                   </View>
                   <View
                     style={{
@@ -454,13 +457,13 @@ const Home = ({ navigation }) => {
 
             {/* grapich */}
 
-            <View style={[styles.header, { justifyContent: 'space-between' }]}>
+            <View style={[styles.header, { justifyContent: 'space-between', color: scheme === 'dark' ? '#000000' : '#000000' }]}>
               <Text
                 style={{
                   paddingLeft: windowWidht * 0.052,
                   backgroundColor: '#FFFFFF',
                   marginVertical: windowHeight * 0.02,
-                  // backgroundColor: 'red',
+                  color: scheme === 'dark' ? '#000000' : '#000000'
                 }}>
                 {data2.year}
               </Text>
@@ -484,13 +487,14 @@ const Home = ({ navigation }) => {
                         backgroundColor: data2.colorChart3
                           ? data2.colorChart3
                           : '#7a8793',
+                        color: scheme === 'dark' ? '#000000' : '#000000'
                       },
                     ]}>
-                    <Text style={styles.textMonth}>
+                    <Text style={[styles.textMonth,{color: scheme === 'dark' ? '#000000' : '#000000'}]}>
                       {data2.nMonth3 ? data2.nMonth3 + '' : ''}
                     </Text>
                   </TouchableOpacity>
-                  <Text>{data2.monthName3}</Text>
+                  <Text style={{color: scheme === 'dark' ? '#000000' : '#000000'}}>{data2.monthName3}</Text>
                 </View>
 
                 <View style={styles.month2}>
@@ -512,13 +516,14 @@ const Home = ({ navigation }) => {
                         backgroundColor: data2.colorChart2
                           ? data2.colorChart2
                           : '#7a8793',
+                        color: scheme === 'dark' ? '#000000' : '#000000'
                       },
                     ]}>
-                    <Text style={styles.textMonth}>
+                    <Text style={[styles.textMonth,{color: scheme === 'dark' ? '#000000' : '#000000'}]}>
                       {data2.nMonth2 ? data2.nMonth2 + '' : ''}
                     </Text>
                   </TouchableOpacity>
-                  <Text>{data2.monthName2}</Text>
+                  <Text style={{color: scheme === 'dark' ? '#000000' : '#000000'}}>{data2.monthName2}</Text>
                 </View>
 
                 <View style={styles.month1}>
@@ -540,13 +545,14 @@ const Home = ({ navigation }) => {
                         backgroundColor: data2.colorChart1
                           ? data2.colorChart1
                           : '#7a8793',
+                        color: scheme === 'dark' ? '#000000' : '#000000'
                       },
                     ]}>
                     <Text style={styles.textMonth}>
                       {data2.nMonth1 ? data2.nMonth1 + '%' : ''}
                     </Text>
                   </TouchableOpacity>
-                  <Text>{data2.monthName1}</Text>
+                  <Text style={{color: scheme === 'dark' ? '#000000' : '#000000'}}>{data2.monthName1}</Text>
                 </View>
               </View>
             </View>
@@ -561,7 +567,7 @@ const Home = ({ navigation }) => {
                     ? data2.colorBox1
                     : '#7a8793',
                 }}></View>
-              <Text>Kurang</Text>
+              <Text style={{color: scheme === 'dark' ? '#000000' : '#000000'}}>Kurang</Text>
 
               <View
                 style={{
@@ -572,7 +578,7 @@ const Home = ({ navigation }) => {
                     ? data2.colorBox2
                     : '#7a8793',
                 }}></View>
-              <Text>Cukup</Text>
+              <Text style={{color: scheme === 'dark' ? '#000000' : '#000000'}}>Cukup</Text>
 
               <View
                 style={{
@@ -583,7 +589,7 @@ const Home = ({ navigation }) => {
                     ? data2.colorBox3
                     : '#7a8793',
                 }}></View>
-              <Text>baik</Text>
+              <Text style={{color: scheme === 'dark' ? '#000000' : '#000000'}}>baik</Text>
 
               <View
                 style={{
@@ -594,7 +600,7 @@ const Home = ({ navigation }) => {
                     ? data2.colorBox4
                     : '#7a8793',
                 }}></View>
-              <Text>sangat baik</Text>
+              <Text style={{color: scheme === 'dark' ? '#000000' : '#000000'}}>sangat baik</Text>
             </View>
           </ScrollView>
           {/* <View style={{ flex : 1, backgroundColor : 'red', fontWeight : 'bold', paddingTop : 'auto', paddingnLeft : 'auto', paddingRight : windowWidht*0.02 }}>
@@ -605,9 +611,10 @@ const Home = ({ navigation }) => {
               marginTop: 'auto',
               marginLeft: 'auto',
               marginRight: windowWidht * 0.02,
-              backgroundColor: '#FFFFFF',
+              backgroundColor: scheme === 'dark' ? '#FFFFFF' : '#000000',
+              color: scheme === 'dark' ? '#000000' : '#000000',
             }}>
-            V-21-11-2025
+            V-15-12-2025 V1
           </Text>
         </SafeAreaView>
         <Footer focus="Home" navigation={navigation} />

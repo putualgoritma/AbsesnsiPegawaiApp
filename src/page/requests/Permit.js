@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Dimensions,
   Alert,
+  useColorScheme
 } from 'react-native';
 import React from 'react';
 import {useState} from 'react';
@@ -40,6 +41,7 @@ const Permit = ({navigation}) => {
   const [memo, setMemo] = useState('');
   const [mode, setMode] = useState('date');
   const [loading, setLoading] = useState(true);
+  const scheme = useColorScheme();
   // const [checked, setChecked] = React.useState('first');
   const [form, setForm] = useState({
     staff_id: STAFF_ID,
@@ -163,7 +165,7 @@ const Permit = ({navigation}) => {
               marginLeft: 'auto',
               fontWeight: 'bold',
               fontSize: 20,
-              color: '#000000',
+              color: scheme === 'dark' ? '#000000' : '#000000'
             }}>
             Input Data Permisi
           </Text>
@@ -174,7 +176,7 @@ const Permit = ({navigation}) => {
                 status={form.type === 'back' ? 'checked' : 'unchecked'}
                 onPress={() => setForm({...form, type: 'back'})}
               />
-              <Text style={{marginTop: 10}}>Kembali</Text>
+              <Text style={{marginTop: 10, color: scheme === 'dark' ? '#000000' : '#000000'}}>Kembali</Text>
             </View>
             <View style={{flexDirection: 'row'}}>
               <RadioButton
@@ -186,11 +188,11 @@ const Permit = ({navigation}) => {
                   setTime2('00:00');
                 }}
               />
-              <Text style={{marginTop: 10}}>Tidak Kembali</Text>
+              <Text style={{marginTop: 10, color: scheme === 'dark' ? '#000000' : '#000000'}}>Tidak Kembali</Text>
             </View>
           </View>
 
-          <Text>
+          <Text style={{color: scheme === 'dark' ? '#000000' : '#000000'}}>
             Jam Mulai<Text style={{color: '#ff0000'}}>*</Text>
           </Text>
           <TouchableOpacity
@@ -203,7 +205,7 @@ const Permit = ({navigation}) => {
             <View style={{flexDirection: 'row'}}>
               {/* <FontAwesomeIcon icon={faClock} style={{color:'#FFFFFF'}} size={ 20 } /> */}
               {/* <Distance distanceH={5}/> */}
-              <Text style={styles.text}>{time}</Text>
+              <Text style={[styles.text,{color: scheme === 'dark' ? '#000000' : '#000000'}]}>{time}</Text>
             </View>
           </TouchableOpacity>
 
@@ -219,7 +221,7 @@ const Permit = ({navigation}) => {
           )}
           {form.type === 'back' && (
             <>
-              <Text>
+              <Text style={{color: scheme === 'dark' ? '#000000' : '#000000'}}>
                 Jam Berakhir<Text style={{color: '#ff0000'}}>*</Text>
               </Text>
               <TouchableOpacity
@@ -232,7 +234,7 @@ const Permit = ({navigation}) => {
                 <View style={{flexDirection: 'row'}}>
                   {/* <FontAwesomeIcon icon={faClock} style={{color:'#FFFFFF'}} size={ 20 } /> */}
                   {/* <Distance distanceH={5}/> */}
-                  <Text style={styles.text}>{time2}</Text>
+                  <Text style={[styles.text,{color: scheme === 'dark' ? '#000000' : '#000000'}]}>{time2}</Text>
                 </View>
               </TouchableOpacity>
               {show1 && (
@@ -248,7 +250,7 @@ const Permit = ({navigation}) => {
             </>
           )}
 
-          <Text style={styles.title}>Memo<Text style={{color: '#ff0000'}}>*</Text></Text>
+          <Text style={[styles.title,{color: scheme === 'dark' ? '#000000' : '#000000'}]}>Memo<Text style={{color: '#ff0000'}}>*</Text></Text>
           <Textarea
             containerStyle={styles.textareaContainer}
             style={styles.textarea}
@@ -266,7 +268,7 @@ const Permit = ({navigation}) => {
           onPress={() => {
             handleAction();
           }}>
-          <Text style={{color: '#FFFFFF', fontSize: 24, fontWeight: 'bold'}}>
+          <Text style={{color: scheme === 'dark' ? '#000000' : '#000000', fontSize: 24, fontWeight: 'bold'}}>
             Ajukan
           </Text>
         </TouchableOpacity>

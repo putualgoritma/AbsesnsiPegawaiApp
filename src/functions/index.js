@@ -1,4 +1,4 @@
-import { Alert, Platform, View } from 'react-native';
+import { Alert, Platform } from 'react-native';
 import { check, request, PERMISSIONS, RESULTS } from 'react-native-permissions';
 import ReactNativeBiometrics from 'react-native-biometrics';
 import Geolocation from '@react-native-community/geolocation';
@@ -6,192 +6,177 @@ import {
   isMockingLocation,
   MockLocationDetectorErrorCode,
 } from 'react-native-turbo-mock-location-detector';
+
 const rnBiometrics = new ReactNativeBiometrics();
 
+/* -------------------------------------------------------------------------- */
+/* CAMERA PERMISSION                                                          */
+/* -------------------------------------------------------------------------- */
 const permissionCamera = async () => {
-  //setLoading(true);
   try {
-    const res = await check(
-      Platform.select({
-        android: PERMISSIONS.ANDROID.CAMERA,
-        ios: PERMISSIONS.IOS.CAMERA,
-      }),
-    );
-    if (res === RESULTS.GRANTED) {
-      console.log('CameraGranted check', 'Yes');
-      //setLoading(false);
-      return true;
-    } else if (res === RESULTS.DENIED) {
-      const res2 = await request(
-        Platform.select({
-          android: PERMISSIONS.ANDROID.CAMERA,
-          ios: PERMISSIONS.IOS.CAMERA,
-        }),
-      );
-      if (res2 === RESULTS.GRANTED) {
-        console.log('CameraGranted request', 'Yes');
-        //setLoading(false);
-        console.log('tesss1');
-        return true;
-      } else {
-        console.log('CameraGranted request', 'No');
-        //setLoading(false);
-        console.log('tesss2');
-        return false;
-      }
+    const permission = Platform.select({
+      android: PERMISSIONS.ANDROID.CAMERA,
+      ios: PERMISSIONS.IOS.CAMERA,
+    });
+
+    const res = await check(permission);
+
+    if (res === RESULTS.GRANTED) return true;
+    if (res === RESULTS.BLOCKED || res === RESULTS.UNAVAILABLE) return false;
+
+    if (res === RESULTS.DENIED) {
+      const req = await request(permission);
+      return req === RESULTS.GRANTED;
     }
-  } catch (err) {
-    console.log('err CameraGranted request', err);
-    //setLoading(false);
+
+    return false;
+  } catch {
     return false;
   }
 };
 
+/* -------------------------------------------------------------------------- */
+/* LOCATION PERMISSION (SAFE FOR ANDROID 10—14)                               */
+/* -------------------------------------------------------------------------- */
 const permissionLocation = async () => {
-  //setLoading(true);
   try {
-    const res = await check(
-      Platform.select({
-        android: PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION,
-        ios: PERMISSIONS.IOS.LOCATION_WHEN_IN_USE,
-      }),
-    );
-    if (res === RESULTS.GRANTED) {
-      console.log('LocationGranted check', 'Yes');
-      //setLoading(false);
+    const permFine = Platform.select({
+      android: PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION,
+      ios: PERMISSIONS.IOS.LOCATION_WHEN_IN_USE,
+    });
+
+    const permCoarse = PERMISSIONS.ANDROID.ACCESS_COARSE_LOCATION;
+
+    // CHECK FINE FIRST
+    const fine = await check(permFine);
+    if (fine === RESULTS.GRANTED) return true;
+
+    // REQUEST IF DENIED
+    if (fine === RESULTS.DENIED) {
+      const req = await request(permFine);
+      if (req !== RESULTS.GRANTED) return false;
       return true;
-    } else if (res === RESULTS.DENIED) {
-      const res2 = await request(
-        Platform.select({
-          android: PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION,
-          ios: PERMISSIONS.IOS.LOCATION_WHEN_IN_USE,
-        }),
-      );
-      if (res2 === RESULTS.GRANTED) {
-        console.log('LocationGranted request', 'Yes');
-        //setLoading(false);
-        return true;
-      } else {
-        console.log('LocationGranted request', 'No');
-        //setLoading(false);
-        return false;
-      }
     }
-  } catch (err) {
-    console.log('err LocationGranted request', err);
-    //setLoading(false);
+
+    if (fine === RESULTS.BLOCKED) return false;
+
+    // ANDROID COARSE FALLBACK
+    if (Platform.OS === "android") {
+      const coarse = await check(permCoarse);
+      if (coarse === RESULTS.GRANTED) return true;
+    }
+
+    return false;
+
+  } catch {
     return false;
   }
 };
 
-const checkGps = async accuracy => {
+/* -------------------------------------------------------------------------- */
+/* VERY STABLE GPS CHECK (NO FREEZE, HIGH ACCURACY OPTIONAL)                  */
+/* -------------------------------------------------------------------------- */
+const checkGps = async (highAccuracy = true) => {
+  console.log("accuracy mode:", highAccuracy);
 
-  console.log('accuracy', accuracy);
-  const opt = {
-    // enableHighAccuracy: accuracy,
-    enableHighAccuracy: accuracy,
-    timeout: 20000,
-    // timeout: 30000,
-    // maximumAge: 10000,
-    maximumAge: 0,
-    // accuracy: 'high',
+  const options = {
+    enableHighAccuracy: highAccuracy,
+    timeout: 15000,
+    maximumAge: 0
   };
-  const getCurrentPosition = () =>
-    new Promise((resolve, error) =>
-      Geolocation.getCurrentPosition(resolve, error, opt),
-    );
+
+  const getPosition = () =>
+    new Promise((resolve, reject) => {
+      Geolocation.getCurrentPosition(resolve, reject, options);
+    });
+
+  // manual timeout protection (10s)
+  const manualTimeout = new Promise(resolve => {
+    setTimeout(() => resolve({ timeout: true }), 10000);
+  });
+
   try {
-    const position = await getCurrentPosition();
-    //setLoading(false);
-    console.log('GPSSS : ', position.coords);
-    return { status: true, data: position.coords };
+    const result = await Promise.race([getPosition(), manualTimeout]);
+
+    if (result.timeout) {
+      console.log("GPS Timeout");
+      return {
+        status: false,
+        data: null,
+        reason: "timeout"
+      };
+    }
+
+    return {
+      status: true,
+      data: result.coords,
+      reason: null
+    };
+
   } catch (err) {
-    console.log('errrggggg', err);
-    // Alert.alert('GPS', 'GPS mati, tolong hidupkan GPS!');
-    //setLoading(false);
-    return { status: false, data: null };
+    console.log("GPS ERROR =>", err);
+    return {
+      status: false,
+      data: null,
+      reason: err.message || "GPS error"
+    };
   }
 };
 
+/* -------------------------------------------------------------------------- */
+/* FINGERPRINT CHECK (_FIXED_)                                                */
+/* -------------------------------------------------------------------------- */
 export const checkFingerprint = async () => {
   try {
     const { available, biometryType } = await rnBiometrics.isSensorAvailable();
 
-    if (!available) {
-      Alert.alert(
-        'HP tidak support fingerprint',
-        'Konfirmasi ke admin untuk menonaktifkan fitur fingerprint *abaikan jika sudah konfirmasi ke admin',
-      );
-      return true;
-    }
+    if (!available) return false;
 
-    return true;
-    // console.log('Biometry type:', biometryType);
+    // Accept all valid types from both Android and iOS
+    const allowedTypes = [
+      rnBiometrics.TouchID,
+      rnBiometrics.FaceID,
+      rnBiometrics.Biometrics,
+      "Fingerprint",   // <-- Android
+      "Biometrics",    // <-- Android
+    ];
 
-    // const { success } = await rnBiometrics.simplePrompt({
-    //   promptMessage: 'Verifikasi sidik jari untuk melanjutkan',
-    //   cancelButtonText: 'Batal',
-    // });
+    return allowedTypes.includes(biometryType);
 
-    // if (success) {
-    //   console.log('Fingerprint verified successfully');
-    //   return true;
-    // } else {
-    //   Alert.alert('Verifikasi dibatalkan');
-    //   return false;
-    // }
   } catch (error) {
-    Alert.alert('Fingerprint err', 'Fingerprint tidak jalan!');
-    return true;
-    // if (error.name === 'UserCancel') {
-    //   Alert.alert('Verifikasi dibatalkan oleh pengguna');
-    // } else {
-    //   Alert.alert('Fingerprint Error', error.message || 'Fingerprint gagal!');
-    // }
-    // return false;
+    console.log("checkFingerprint error:", error);
+    return false;
   }
 };
 
-const fakeGps = async () => {
-  console.log('Fake GPS');
-  // return true;
-  await isMockingLocation()
-    .then(({ isLocationMocked }) => {
-      if (isLocationMocked === true) {
-        // Alert.alert('gps palsu');
-        // console.log('fake');
-        return true;
-      } else {
-        // console.log('real');
-        // Alert.alert('gps asli');
-        return true;
-      }
 
-      // isLocationMocked: boolean
-      // boolean result for Android and iOS >= 15.0
-    })
-    .catch(error => {
-      // error.message - descriptive message
-      switch (error.code) {
-        case MockLocationDetectorErrorCode.GPSNotEnabled: {
-          // user disabled GPS
-          console.log('fake 1');
-          return true;
-        }
-        case MockLocationDetectorErrorCode.NoLocationPermissionEnabled: {
-          // user has no permission to access location
-          console.log('fake 2');
-          return true;
-        }
-        case MockLocationDetectorErrorCode.CantDetermine: {
-          console.log('fake 3');
-          return true;
-          // always for iOS < 15.0
-          // for android and iOS if couldn't fetch GPS position
-        }
-      }
-    });
+/* -------------------------------------------------------------------------- */
+/* FAKE GPS CHECK (FAST + NEVER FREEZE)                                       */
+/* -------------------------------------------------------------------------- */
+const fakeGps = async () => {
+  console.log("Fake GPS check");
+  try {
+    const result = await Promise.race([
+      isMockingLocation(),
+      new Promise(resolve =>
+        setTimeout(() =>
+          resolve({ isLocationMocked: false }), 5000)
+      )
+    ]);
+
+    return !!result.isLocationMocked;
+
+  } catch (error) {
+    console.log("fakeGps error:", error);
+    Alert.alert(
+      "Fake GPS Error",
+      `Code: ${error.code}\nMessage: ${error.message}`
+    );
+    return false;
+  }
 };
+
+/* -------------------------------------------------------------------------- */
 
 const myFunctions = {
   permissionCamera,

@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Dimensions,
   Alert,
+  useColorScheme
 } from 'react-native';
 import React from 'react';
 import { useState } from 'react';
@@ -38,6 +39,7 @@ const Dispense = ({ navigation }) => {
   const [loading, setLoading] = useState(true);
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
   const [isDatePickerVisible2, setDatePickerVisibility2] = useState(false);
+  const scheme = useColorScheme();
   const [form, setForm] = useState({
     start: '',
     end: '',
@@ -300,7 +302,7 @@ const Dispense = ({ navigation }) => {
               marginLeft: 'auto',
               fontWeight: 'bold',
               fontSize: 20,
-              color: '#000000',
+              color: scheme === 'dark' ? '#000000' : '#000000'
             }}>
             Input Data Dispensasi
           </Text>
@@ -312,7 +314,7 @@ const Dispense = ({ navigation }) => {
                 status={form.model === 'regular' ? 'checked' : 'unchecked'}
                 onPress={() => setForm({ ...form, model: 'regular', category: 'dispense' })}
               />
-              <Text style={{ marginTop: 10 }}>Umum</Text>
+              <Text style={{ marginTop: 10, color: scheme === 'dark' ? '#000000' : '#000000' }}>Umum</Text>
             </View>
             <View style={{ flexDirection: 'row' }}>
               <RadioButton
@@ -325,15 +327,15 @@ const Dispense = ({ navigation }) => {
                   setTime2('00:00');
                 }}
               />
-              <Text style={{ marginTop: 10 }}>Khusus</Text>
+              <Text style={{ marginTop: 10, color: scheme === 'dark' ? '#000000' : '#000000' }}>Khusus</Text>
             </View>
           </View>
 
-          <Text style={styles.title}>
+          <Text style={[styles.title, { color: scheme === 'dark' ? '#000000' : '#000000' }]}>
             Tanggal Mulai<Text style={{ color: '#ff0000' }}>*</Text>
           </Text>
           <TouchableOpacity style={styles.input} onPress={showDatePicker}>
-            <Text style={styles.text}>{date}</Text>
+            <Text style={[styles.text,{color: scheme === 'dark' ? '#000000' : '#000000'}]}>{date}</Text>
           </TouchableOpacity>
           <DateTimePickerModal
             isVisible={isDatePickerVisible}
@@ -341,11 +343,11 @@ const Dispense = ({ navigation }) => {
             onConfirm={handleConfirm}
             onCancel={hideDatePicker}
           />
-          <Text style={styles.title}>
+          <Text style={[styles.title, { color: scheme === 'dark' ? '#000000' : '#000000' }]}>
             Tanggal Berakhir<Text style={{ color: '#ff0000' }}>*</Text>
           </Text>
           <TouchableOpacity style={styles.input} onPress={showDatePicker2}>
-            <Text style={styles.text}>{date2}</Text>
+            <Text style={[styles.text, {color: scheme === 'dark' ? '#000000' : '#000000'}]}>{date2}</Text>
           </TouchableOpacity>
           <DateTimePickerModal
             isVisible={isDatePickerVisible2}
@@ -356,7 +358,7 @@ const Dispense = ({ navigation }) => {
 
           {form.model === 'special' && (
             <>
-              <Text>
+              <Text style={{color: scheme === 'dark' ? '#000000' : '#000000'}}>
                 Jam Mulai<Text style={{ color: '#ff0000' }}>*</Text>
               </Text>
               <TouchableOpacity
@@ -369,7 +371,7 @@ const Dispense = ({ navigation }) => {
                 <View style={{ flexDirection: 'row' }}>
                   {/* <FontAwesomeIcon icon={faClock} style={{color:'#FFFFFF'}} size={ 20 } /> */}
                   {/* <Distance distanceH={5}/> */}
-                  <Text style={styles.text}>{time}</Text>
+                  <Text style={[styles.text, {color: scheme === 'dark' ? '#000000' : '#000000'}]}>{time}</Text>
                 </View>
               </TouchableOpacity>
 
@@ -384,7 +386,7 @@ const Dispense = ({ navigation }) => {
                 />
               )}
 
-              <Text>
+              <Text style={{color: scheme === 'dark' ? '#000000' : '#000000'}}>
                 Jam Berakhir<Text style={{ color: '#ff0000' }}>*</Text>
               </Text>
               <TouchableOpacity
@@ -397,7 +399,7 @@ const Dispense = ({ navigation }) => {
                 <View style={{ flexDirection: 'row' }}>
                   {/* <FontAwesomeIcon icon={faClock} style={{color:'#FFFFFF'}} size={ 20 } /> */}
                   {/* <Distance distanceH={5}/> */}
-                  <Text style={styles.text}>{time2}</Text>
+                  <Text style={[styles.text, {color: scheme === 'dark' ? '#000000' : '#000000'}]}>{time2}</Text>
                 </View>
               </TouchableOpacity>
               {show1 && (
@@ -413,10 +415,10 @@ const Dispense = ({ navigation }) => {
             </>
           )}
 
-          <Text style={styles.title}>Memo<Text style={{ color: '#ff0000' }}>*</Text></Text>
+          <Text style={[styles.title,{color: scheme === 'dark' ? '#000000' : '#000000'}]}>Memo<Text style={{ color: '#ff0000' }}>*</Text></Text>
           <Textarea
             containerStyle={styles.textareaContainer}
-            style={styles.textarea}
+            style={[styles.textarea, {color: scheme === 'dark' ? '#000000' : '#000000'}]}
             placeholder="Mohon isi memo dengan jelas (uraian kegiatan & lokasi kegiatan)"
             editable={true}
             maxLength={255}
@@ -425,7 +427,7 @@ const Dispense = ({ navigation }) => {
               setForm({ ...form, description: value })
             }></Textarea>
 
-          <Text style={styles.title}>Bukti</Text>
+          <Text style={[styles.title, {color: scheme === 'dark' ? '#000000' : '#000000'}]}>Bukti</Text>
           <TouchableOpacity
             onPress={() =>
               launchCamera(
@@ -468,7 +470,7 @@ const Dispense = ({ navigation }) => {
           onPress={() => {
             handleAction();
           }}>
-          <Text style={{ color: '#FFFFFF', fontSize: 24, fontWeight: 'bold' }}>
+          <Text style={{ color: scheme === 'dark' ? '#000000' : '#000000', fontSize: 24, fontWeight: 'bold' }}>
             Ajukan
           </Text>
         </TouchableOpacity>

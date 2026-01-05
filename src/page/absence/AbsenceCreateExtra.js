@@ -121,175 +121,196 @@ const AbsenceCreateExtra = ({navigation, route}) => {
   };
 
   useEffect(() => {
-    console.log('route.params', route.params);
-    setLoading(true);
-    fakeGps();
-    Promise.all([
-      myFunctions.checkFingerprint(),
-      myFunctions.permissionCamera(),
-      myFunctions.permissionLocation(),
-    ])
-      .then(res => {
-        setLoading(true);
-        //if fingerprint off
-        if (!res[0]) {
-          setFinger('OFF');
-        }
-        //if perrmission loc
-        if (res[2]) {
-          //check gps
-          myFunctions
-            .checkGps(route.params.highAccuracy)
-            .then(function (gps) {
-              if (!gps.status) {
-                setLoading(false);
-                console.log('checkGps useeffect', 'false');
-              } else {
-                console.log('position', gps.data);
-                //get distance
-                const j = getDistance(gps.data, {
-                  latitude: parseFloat(latref),
-                  longitude: parseFloat(lngref),
-                });
-                console.log('distance', j);
-                setTest(j);
-                if (j > route.params.radius) {
-                  setJarak('1');
-                  setJ1(j);
-                  if (gps.data.accuracy > 40) {
-                    Alert.alert(
-                      'Peringatan',
-                      'Anda berada di luar jangkauan, akurasi GPS: ' +
-                        gps.data.accuracy +
-                        ', tolong kalibrasi GPS atau pakai Internet yang lebih kuat.',
-                    );
-                  }
-                } else {
-                  setJarak('2');
-                }
+  let isMounted = true; // prevent state update if unmounted
 
-                // positionNew = position
-                console.log(
-                  'posisiisii ',
-                  gps.data.latitude,
-                  gps.data.longitude,
+  const init = async () => {
+    try {
+      setLoading(true);
+      // Run Fake GPS but never block init()
+      myFunctions.fakeGps()
+        .then(isFake => {
+          if (isFake) {
+            setfakeGpsV(2);
+          } else {
+            setfakeGpsV(3);
+          }
+        })
+        .catch(err => {
+          console.log("fakeGps error:", err);
+        });
+
+      const [fingerOK, cameraOK, locationOK] = await Promise.all([
+        myFunctions.checkFingerprint(),
+        myFunctions.permissionCamera(),
+        myFunctions.permissionLocation(),
+      ]);
+
+      if (!fingerOK){
+                Alert.alert(
+                  "Fingerprint Permission",
+                  "Fingerprint Error."
                 );
-                setForm({
-                  ...form,
-                  lat: gps.data.latitude,
-                  lng: gps.data.longitude,
-                  accuracy: gps.data.accuracy,
-                  distance: j,
-                });
-                setLoading(false);
+                // setFinger("OFF");
               }
-            })
-            .catch(error => {
-              console.log('err checkGps useeffect', error.message);
-              setLoading(false);
-            });
-        } else {
-          Alert.alert(
-            'Location Permission',
-            'Location Permission tidak diizinkan.',
-          );
-        }
-        setLoading(false);
-      })
-      .catch(e => {
-        console.log('err promise all', e);
-        setLoading(false);
+
+      if (!locationOK) {
+        Alert.alert(
+          "Location Permission",
+          "Location Permission tidak diizinkan."
+        );
+        return; // stop execution here
+      }
+
+      const gps = await myFunctions.checkGps(route.params.highAccuracy);
+
+      if (!gps.status) {
+        console.log("checkGps useeffect", "false");
+        return;
+      }
+
+      const j = getDistance(gps.data, {
+        latitude: parseFloat(latref),
+        longitude: parseFloat(lngref),
       });
 
-    setLoading(false);
-  }, []);
+      console.log("distance", j);
+
+      if (j > route.params.radius) {
+        setJarak("1");
+        setJ1(j);
+        if (gps.data.accuracy > 40) {
+          Alert.alert(
+            "Peringatan",
+            "Anda berada di luar jangkauan, akurasi GPS: " +
+              gps.data.accuracy +
+              ", tolong kalibrasi GPS atau pakai Internet yang lebih kuat."
+          );
+        }
+      } else {
+        setJarak("2");
+      }
+
+      if (!isMounted) return;
+
+      setForm(prev => ({
+        ...prev,
+        lat: gps.data.latitude,
+        lng: gps.data.longitude,
+        accuracy: gps.data.accuracy,
+        distance: j,
+      }));
+    } catch (e) {
+      console.log("err useEffect", e);
+    } finally {
+      if (isMounted) setLoading(false); // final exit
+    }
+  };
+
+  init();
+
+  return () => {
+    isMounted = false;
+  };
+}, []);
+
 
   const onRefresh = React.useCallback(() => {
-    setRefreshing(true);
-    console.log(route.params);
-    setLoading(true);
-    setfakeGpsV(0);
-    fakeGps();
-    Promise.all([
-      myFunctions.checkFingerprint(),
-      myFunctions.permissionCamera(),
-      myFunctions.permissionLocation(),
-    ])
-      .then(res => {
-        setLoading(true);
-        //if fingerprint off
-        if (!res[0]) {
-          setFinger('OFF');
-        }
-        //if perrmission loc
-        if (res[2]) {
-          //check gps
-          myFunctions
-            .checkGps(route.params.highAccuracy)
-            .then(function (gps) {
-              if (!gps.status) {
-                setLoading(false);
-                console.log('checkGps useeffect', 'false');
-              } else {
-                console.log('position', gps.data);
-                //get distance
-                const j = getDistance(gps.data, {
-                  latitude: parseFloat(latref),
-                  longitude: parseFloat(lngref),
-                });
-                console.log('distance', j);
-                setTest(j);
-                if (j > route.params.radius) {
-                  setJarak('1');
-                  setJ1(j);
-                  if (gps.data.accuracy > 40) {
-                    Alert.alert(
-                      'Peringatan',
-                      'Anda berada di luar jangkauan, akurasi GPS: ' +
-                        gps.data.accuracy +
-                        ', tolong kalibrasi GPS atau pakai Internet yang lebih kuat.',
-                    );
-                  }
-                } else {
-                  setJarak('2');
-                }
+  let isMounted = true;
 
-                // positionNew = position
-                console.log(
-                  'posisiisii ',
-                  gps.data.latitude,
-                  gps.data.longitude,
+  const refresh = async () => {
+    try {
+      setRefreshing(true);
+      setLoading(true);
+
+      setfakeGpsV(0);
+      // Run Fake GPS but never block init()
+      myFunctions.fakeGps()
+        .then(isFake => {
+          if (isFake) {
+            setfakeGpsV(2);
+          } else {
+            setfakeGpsV(3);
+          }
+        })
+        .catch(err => {
+          console.log("fakeGps error:", err);
+        });
+
+      const [fingerOK, cameraOK, locationOK] = await Promise.all([
+        myFunctions.checkFingerprint(),
+        myFunctions.permissionCamera(),
+        myFunctions.permissionLocation(),
+      ]);
+
+      if (!fingerOK){
+                Alert.alert(
+                  "Fingerprint Permission",
+                  "Fingerprint Error."
                 );
-                setForm({
-                  ...form,
-                  lat: gps.data.latitude,
-                  lng: gps.data.longitude,
-                });
-                setLoading(false);
+                // setFinger("OFF");
               }
-            })
-            .catch(error => {
-              console.log('err checkGps useeffect', error.message);
-              setLoading(false);
-            });
-        } else {
-          Alert.alert(
-            'Location Permission',
-            'Location Permission tidak diizinkan.',
-          );
-        }
-        setLoading(false);
-      })
-      .catch(e => {
-        console.log('err promise all', e);
-        setLoading(false);
+
+      if (!locationOK) {
+        Alert.alert(
+          "Location Permission",
+          "Location Permission tidak diizinkan."
+        );
+        return;
+      }
+
+      const gps = await myFunctions.checkGps(route.params.highAccuracy);
+
+      if (!gps.status) {
+        console.log("checkGps refresh", "false");
+        return;
+      }
+
+      const j = getDistance(gps.data, {
+        latitude: parseFloat(latref),
+        longitude: parseFloat(lngref),
       });
 
-    setLoading(false);
-    setTimeout(() => {
-      setRefreshing(false);
-    }, 2000);
-  }, []);
+      console.log("distance", j);
+
+      if (j > route.params.radius) {
+        setJarak("1");
+        setJ1(j);
+        if (gps.data.accuracy > 40) {
+          Alert.alert(
+            "Peringatan",
+            "Anda berada di luar jangkauan, akurasi GPS: " +
+              gps.data.accuracy +
+              ", tolong kalibrasi GPS atau pakai Internet yang lebih kuat."
+          );
+        }
+      } else {
+        setJarak("2");
+      }
+
+      if (!isMounted) return;
+
+      setForm(prev => ({
+        ...prev,
+        lat: gps.data.latitude,
+        lng: gps.data.longitude,
+      }));
+    } catch (e) {
+      console.log("err onRefresh", e);
+    } finally {
+      if (isMounted) {
+        setLoading(false);
+        setRefreshing(false);
+      }
+    }
+  };
+
+  refresh();
+
+  return () => {
+    isMounted = false;
+  };
+}, []);
+
 
   const [image, set_image] = useState({
     base64: '',
@@ -739,6 +760,10 @@ const AbsenceCreateExtra = ({navigation, route}) => {
       </SafeAreaView>
     );
   } else {
+  //   Alert.alert(
+  //   "Peringatan Loading",
+  //   `loading: ${loading}` + ` fakeGpsV: ${fakeGpsV}` + ` jarak: ${jarak}`
+  // );
     return (
       <View>
         <ScreenLoading />

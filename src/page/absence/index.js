@@ -10,19 +10,20 @@ import {
   Alert,
   RefreshControl,
   Platform,
+  useColorScheme
 } from 'react-native';
-import React, {useEffect, useState} from 'react';
-import MapView, {Callout, Marker, Circle} from 'react-native-maps';
-import {useSelector} from 'react-redux';
+import React, { useEffect, useState } from 'react';
+import MapView, { Callout, Marker, Circle } from 'react-native-maps';
+import { useSelector } from 'react-redux';
 import API from '../../service';
 import ReactNativeBiometrics from 'react-native-biometrics';
 import RNFetchBlob from 'react-native-blob-util';
-import {getDistance} from 'geolib';
+import { getDistance } from 'geolib';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import ScreenLoading from '../loading/ScreenLoading';
-import {SafeAreaView} from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import myFunctions from '../../functions';
-import {launchCamera} from 'react-native-image-picker';
+import { launchCamera } from 'react-native-image-picker';
 import {
   isMockingLocation,
   MockLocationDetectorErrorCode,
@@ -30,7 +31,7 @@ import {
 import Config from 'react-native-config';
 import Textarea from 'react-native-textarea';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {useDispatch} from 'react-redux';
+import { useDispatch } from 'react-redux';
 import {
   SET_DATA_PERMISSION,
   SET_DATA_TOKEN,
@@ -39,7 +40,7 @@ import {
 } from '../../redux/action';
 import { InlineVisionCamera } from '../absence/InlineVisionCamera';
 
-const Absence = ({navigation, route}) => {
+const Absence = ({ navigation, route }) => {
   const TOKEN = useSelector(state => state.TokenReducer);
   const USER = useSelector(state => state.UserReducer);
   const USER_ID = useSelector(state => state.UserReducer.id);
@@ -52,7 +53,7 @@ const Absence = ({navigation, route}) => {
   const [courseDetails, setCourseDetails] = useState();
   const [jarak, setJarak] = useState('1');
   const [test, setTest] = useState('');
-  const {width, height} = Dimensions.get('window');
+  const { width, height } = Dimensions.get('window');
   const ASPECT_RATIO = width / height;
   const LATITUDE_DELTA = 0.4922;
   const LONGITUDE_DELTA = LATITUDE_DELTA * ASPECT_RATIO;
@@ -78,273 +79,311 @@ const Absence = ({navigation, route}) => {
   const lngref = route.params.lng; // -122.40441607671049
   const dispatch = useDispatch();
   const rnBiometrics = new ReactNativeBiometrics();
+  const scheme = useColorScheme();
 
   const fakeGps = async () => {
     console.log('Fake GPS');
-    // return true;
-    await isMockingLocation()
-      .then(({isLocationMocked}) => {
-        if (isLocationMocked === true) {
-          setfakeGpsV(2);
-          return (
-            <View>
-              <Text>
-                Anda Menggunakan Fake GPS Tolong Matikan Fake GPS dan restart HP
-                Anda Kembali
-              </Text>
-            </View>
-          );
-          // return true;
+
+    try {
+      // Prevent freeze: timeout after 2.5 sec
+      const result = await Promise.race([
+        isMockingLocation(),
+        new Promise(resolve =>
+          setTimeout(() => resolve({ isLocationMocked: false, timeout: true }), 2500)
+        ),
+      ]);
+
+      if (result?.isLocationMocked === true) {
+        console.log("FAKE GPS DETECTED");
+        setfakeGpsV(2);
+        return true;
+      } else {
+        if (result?.timeout) {
+          console.log("FakeGPS check timeout → assume real");
         } else {
-          setfakeGpsV(3);
-          return (
-            <View>
-              <Text>
-                Anda Menggunakan Fake GPS Tolong Matikan Fake GPS dan restart HP
-                Anda Kembali
-              </Text>
-            </View>
-          );
-          // return true;
+          console.log("Real GPS");
         }
 
-        // isLocationMocked: boolean
-        // boolean result for Android and iOS >= 15.0
-      })
-      .catch(error => {
-        // error.message - descriptive message
-        switch (error.code) {
-          case MockLocationDetectorErrorCode.GPSNotEnabled: {
-            // user disabled GPS
-            console.log('fake 1');
-            return true;
-          }
-          case MockLocationDetectorErrorCode.NoLocationPermissionEnabled: {
-            // user has no permission to access location
-            console.log('fake 2');
-            return true;
-          }
-          case MockLocationDetectorErrorCode.CantDetermine: {
-            console.log('fake 3');
-            return true;
-            // always for iOS < 15.0
-            // for android and iOS if couldn't fetch GPS position
-          }
-        }
-      });
+        setfakeGpsV(3);
+        return true;
+      }
+
+    } catch (error) {
+      console.log('Fake GPS error:', error.code);
+
+      switch (error.code) {
+        case MockLocationDetectorErrorCode.GPSNotEnabled:
+          console.log("GPS not enabled");
+          return true;
+
+        case MockLocationDetectorErrorCode.NoLocationPermissionEnabled:
+          console.log("No location permission");
+          return true;
+
+        case MockLocationDetectorErrorCode.CantDetermine:
+          console.log("Cannot determine GPS");
+          return true;
+
+        default:
+          console.log("Unknown error");
+          return true;
+      }
+    }
   };
 
   useEffect(() => {
-    console.log('route.params', route.params);
-    setLoading(true);
-    fakeGps();
-    // myFunctions.fakeGps();
-    Promise.all([
-      myFunctions.checkFingerprint(),
-      myFunctions.permissionCamera(),
-      myFunctions.permissionLocation(),
-      // myFunctions.fakeGps(),
-      // ,
-    ])
-      .then(res => {
-        console.log('rpromise all', res);
-        setLoading(true);
-        //if fingerprint off
-        console.log('kdjdkclcorf :', res[3]);
-        if (!res[0]) {
-          setFinger('OFF');
-        }
-        //if perrmission loc
-        if (res[2]) {
-          //check gps
-          myFunctions
-            .checkGps(highAccuracy)
-            .then(function (gps) {
-              if (!gps.status) {
-                setLoading(false);
-                console.log('checkGps useeffect', 'false');
-              } else {
-                console.log('position', gps.data);
-                //get distance
-                const j = getDistance(gps.data, {
-                  latitude: parseFloat(latref),
-                  longitude: parseFloat(lngref),
-                });
-                console.log('distance', j);
-                setTest(j);
-                if (j > route.params.radius) {
-                  setJarak('1');
-                  setJ1(j);
-                  if (gps.data.accuracy > 40) {
-                    Alert.alert(
-                      'Peringatan',
-                      'Anda berada di luar jangkauan, akurasi GPS: ' +
-                        gps.data.accuracy +
-                        ', tolong kalibrasi GPS atau pakai Internet yang lebih kuat.',
-                    );
-                  }
+    console.log("route.params", route.params);
 
-                  Alert.alert(
-                    'Anda Berada Diluar',
-                    'Apa Anda mau mengganti accuracy GPS anda',
-                    [
-                      {
-                        text: 'Ya',
-                        onPress: () => {
-                          gpsChange(!highAccuracy);
-                        },
-                      },
-                      {
-                        text: 'TIdak',
-                        onPress: () => console.log('OK Pressed'),
-                        style: 'cancel',
-                      },
-                    ],
-                  );
-                } else {
-                  setJarak('2');
-                }
+    const init = async () => {
+      setLoading(true);
 
-                // positionNew = position
-                console.log(
-                  'posisiisii ',
-                  gps.data.latitude,
-                  gps.data.longitude,
-                );
-                setForm({
-                  ...form,
-                  lat: gps.data.latitude,
-                  lng: gps.data.longitude,
-                  accuracy: gps.data.accuracy,
-                  distance: j,
-                });
-                setLoading(false);
-              }
-            })
-            .catch(error => {
-              console.log('err checkGps useeffect', error.message);
-              setLoading(false);
-            });
-        } else {
+      // Run Fake GPS but never block init()
+      myFunctions.fakeGps()
+        .then(isFake => {
+          if (isFake) {
+            setfakeGpsV(2);
+          } else {
+            setfakeGpsV(3);
+          }
+        })
+        .catch(err => {
+          console.log("fakeGps error:", err);
+        });
+
+
+      try {
+        // Permissions
+        const [fingerOK, cameraOK, locationOK] = await Promise.all([
+          myFunctions.checkFingerprint(),
+          myFunctions.permissionCamera(),
+          myFunctions.permissionLocation(),
+        ]);
+
+        console.log("Permission Results:", { fingerOK, cameraOK, locationOK });
+
+        // Fingerprint may be OFF (it’s okay)
+        if (!fingerOK){
           Alert.alert(
-            'Location Permission',
-            'Location Permission tidak diizinkan.',
+            "Fingerprint Permission",
+            "Fingerprint Error."
+          );
+          // setFinger("OFF");
+        } 
+
+        if (!locationOK) {
+          Alert.alert(
+            "Location Permission",
+            "Izin lokasi ditolak."
           );
           setLoading(false);
+          return;
         }
-      })
-      .catch(e => {
-        console.log('err promise all', e);
-        setLoading(false);
-      });
 
-    // setLoading(false);
-  }, []);
+        // ❗ GPS check with safe timeout (prevents non-stop loading)
+        const gps = await Promise.race([
+          myFunctions.checkGps(highAccuracy),
+          new Promise(resolve =>
+            setTimeout(
+              () => resolve({ status: false, reason: "timeout" }),
+              4000
+            )
+          ),
+        ]);
+
+        if (!gps.status) {
+          console.log("GPS failed:", gps.reason);
+          Alert.alert(
+            "GPS Error",
+            gps.reason === "timeout" ?
+              "Gagal mendapatkan data GPS. Silakan coba lagi." :
+              `Gagal mendapatkan data GPS: ${gps.reason}`
+          );
+          setLoading(false);
+          return;
+        }
+
+        console.log("GPS position:", gps.data);
+
+        // Distance
+        const dist = getDistance(gps.data, {
+          latitude: parseFloat(latref),
+          longitude: parseFloat(lngref),
+        });
+
+        console.log("distance:", dist);
+        setTest(dist);
+
+        // OUTSIDE radius
+        if (dist > route.params.radius) {
+          setJarak("1");
+          setJ1(dist);
+
+          // Accuracy warning
+          if (gps.data.accuracy > 40) {
+            Alert.alert(
+              "Peringatan",
+              `Anda berada di luar jangkauan.\nAkurasi GPS: ${gps.data.accuracy}\nSilakan kalibrasi GPS atau gunakan sinyal lebih kuat.`
+            );
+          }
+
+          Alert.alert(
+            "Anda Berada Diluar",
+            "Apa Anda mau mengganti accuracy GPS Anda?",
+            [
+              { text: "Ya", onPress: () => gpsChange(!highAccuracy) },
+              { text: "Tidak", style: "cancel" },
+            ]
+          );
+        } else {
+          setJarak("2");
+        }
+
+        // Save form
+        setForm(prev => ({
+          ...prev,
+          lat: gps.data.latitude,
+          lng: gps.data.longitude,
+          accuracy: gps.data.accuracy,
+          distance: dist,
+        }));
+
+      } catch (err) {
+        console.log("Init error:", err);
+      }
+
+      setLoading(false);
+    };
+
+    init();
+    setLoading(false);
+  }, [highAccuracy, latref, lngref, route.params]);
 
   const onRefresh = React.useCallback(() => {
+    console.log(">>> REFRESH START");
     setRefreshing(true);
-    console.log(route.params);
     setLoading(true);
     setfakeGpsV(0);
-    fakeGps();
-    Promise.all([
-      //myFunctions.checkFingerprint(),
-      myFunctions.permissionCamera(),
-      myFunctions.permissionLocation(),
-    ])
-      .then(res => {
-        setLoading(true);
-        //if fingerprint off
-        if (!res[0]) {
-          setFinger('OFF');
-        }
-        //if perrmission loc
-        if (res[2]) {
-          //check gps
-          myFunctions
-            .checkGps(highAccuracy)
-            .then(function (gps) {
-              if (!gps.status) {
-                console.log('checkGps useeffect', 'false');
-                setLoading(false);
-              } else {
-                console.log('position', gps.data);
-                //get distance
-                const j = getDistance(gps.data, {
-                  latitude: parseFloat(latref),
-                  longitude: parseFloat(lngref),
-                });
-                console.log('distance', j);
-                setTest(j);
-                if (j > route.params.radius) {
-                  setJarak('1');
-                  setJ1(j);
-                  if (gps.data.accuracy > 40) {
-                    Alert.alert(
-                      'Peringatan',
-                      'Anda berada di luar jangkauan, akurasi GPS: ' +
-                        gps.data.accuracy +
-                        ', tolong kalibrasi GPS atau pakai Internet yang lebih kuat.',
-                    );
-                  }
-                  Alert.alert(
-                    'Anda Berada Diluar',
-                    'Apa Anda mau mengganti accuracy GPS anda',
-                    [
-                      {
-                        text: 'Ya',
-                        onPress: () => {
-                          gpsChange(!highAccuracy);
-                        },
-                      },
-                      {
-                        text: 'TIdak',
-                        onPress: () => console.log('OK Pressed'),
-                        style: 'cancel',
-                      },
-                    ],
-                  );
-                } else {
-                  setJarak('2');
-                }
 
-                // positionNew = position
-                console.log(
-                  'posisiisii ',
-                  gps.data.latitude,
-                  gps.data.longitude,
-                );
-                setForm({
-                  ...form,
-                  lat: gps.data.latitude,
-                  lng: gps.data.longitude,
-                });
-                setLoading(false);
-              }
-            })
-            .catch(error => {
-              console.log('err checkGps useeffect', error.message);
-              setLoading(false);
-            });
-        } else {
-          Alert.alert(
-            'Location Permission',
-            'Location Permission tidak diizinkan.',
-          );
+    const run = async () => {
+      try {
+        // --- NON-BLOCKING FAKE GPS ---
+        myFunctions.fakeGps()
+          .then(isFake => {
+            if (isFake) {
+              Alert.alert(
+                "Fake GPS Terdeteksi",
+                "Aplikasi mendeteksi bahwa Anda menggunakan Fake GPS.\nSilakan matikan Fake GPS sebelum melanjutkan."
+              );
+              setfakeGpsV(2);
+            } else {
+              setfakeGpsV(3);
+            }
+          })
+          .catch(err => {
+            console.log("fakeGps error:", err);
+          });
 
+        // --- CHECK PERMISSIONS ---
+        const [cameraOK, locationOK] = await Promise.all([
+          myFunctions.permissionCamera(),
+          myFunctions.permissionLocation(),
+        ]);
+
+        if (!locationOK) {
+          Alert.alert("Location Permission", "Location Permission tidak diizinkan.");
+          setRefreshing(false);
           setLoading(false);
+          return;
         }
-      })
-      .catch(e => {
-        console.log('err promise all', e);
-        setLoading(false);
-      });
 
-    setLoading(false);
-    setTimeout(() => {
+        if (!cameraOK) {
+          console.log("Camera permission denied");
+        }
+
+        // --- GET GPS WITH TIMEOUT SAFE GUARD ---
+        const gps = await Promise.race([
+          myFunctions.checkGps(highAccuracy),
+          new Promise(resolve =>
+            setTimeout(
+              () => resolve({ status: false, reason: "timeout" }),
+              4000,
+            ),
+          ),
+        ]);
+
+        if (!gps.status) {
+          console.log("GPS failed:", gps.reason);
+          Alert.alert(
+            "GPS Error",
+            gps.reason === "timeout" ?
+              "Gagal mendapatkan data GPS. Silakan coba lagi." :
+              `Gagal mendapatkan data GPS: ${gps.reason}`
+          );
+          setRefreshing(false);
+          setLoading(false);
+          return;
+        }
+
+        console.log("GPS Position:", gps.data);
+
+        // --- DISTANCE CALCULATION ---
+        const dist = getDistance(gps.data, {
+          latitude: parseFloat(latref),
+          longitude: parseFloat(lngref),
+        });
+
+        console.log("Distance:", dist);
+
+        setTest(dist);
+        setJ1(dist);
+
+        // --- OUTSIDE RADIUS ---
+        if (dist > route.params.radius) {
+          setJarak("1");
+
+          if (gps.data.accuracy > 40) {
+            Alert.alert(
+              "Peringatan",
+              `Anda berada di luar jangkauan.\nAkurasi GPS: ${gps.data.accuracy}\nKalibrasi GPS atau gunakan sinyal lebih kuat.`,
+            );
+          }
+
+          Alert.alert(
+            "Anda Berada Diluar",
+            "Apa Anda mau mengganti accuracy GPS Anda?",
+            [
+              { text: "Ya", onPress: () => gpsChange(!highAccuracy) },
+              { text: "Tidak", style: "cancel" },
+            ],
+          );
+        }
+
+        // --- INSIDE RADIUS ---
+        else {
+          setJarak("2");
+        }
+
+        // --- UPDATE FORM ---
+        setForm(prev => ({
+          ...prev,
+          lat: gps.data.latitude,
+          lng: gps.data.longitude,
+          accuracy: gps.data.accuracy,
+          distance: dist,
+        }));
+
+      } catch (err) {
+        console.log("ERR onRefresh:", err);
+      }
+
+      setLoading(false);
       setRefreshing(false);
-    }, 2000);
-  }, []);
+      console.log(">>> REFRESH END");
+    };
+
+    run();
+  }, [highAccuracy, latref, lngref, route.params]);
+
 
   // if(route.params.img == {}){
   const [image, set_image] = useState({
@@ -358,114 +397,100 @@ const Absence = ({navigation, route}) => {
     from: 'api',
   });
 
-  const gpsChange = data => {
+  const gpsChange = async (mode) => {
     setLoading(true);
-    setHighAccuracy(data);
-    storeDataHightAccuracy(data);
+    setHighAccuracy(mode);
+    storeDataHightAccuracy(mode);
 
-    fakeGps();
-    // myFunctions.fakeGps();
-    Promise.all([
-      //myFunctions.checkFingerprint(),
-      myFunctions.permissionCamera(),
-      myFunctions.permissionLocation(),
-      // myFunctions.fakeGps(),
-      // ,
-    ])
-      .then(res => {
-        console.log('rpromise all', res);
-        setLoading(true);
-        //if fingerprint off
-        console.log('kdjdkclcorf :', res[3]);
-        if (!res[0]) {
-          setFinger('OFF');
-        }
-        //if perrmission loc
-        if (res[2]) {
-          //check gps
-          myFunctions
-            .checkGps(data)
-            .then(function (gps) {
-              if (!gps.status) {
-                setLoading(false);
-                console.log('checkGps useeffect', 'false');
-              } else {
-                console.log('position', gps.data);
-                //get distance
-                const j = getDistance(gps.data, {
-                  latitude: parseFloat(latref),
-                  longitude: parseFloat(lngref),
-                });
-                console.log('distance', j);
-                setTest(j);
-                if (j > route.params.radius) {
-                  setJarak('1');
-                  setJ1(j);
-                  if (gps.data.accuracy > 40) {
-                    Alert.alert(
-                      'Peringatan',
-                      'Anda berada di luar jangkauan, akurasi GPS: ' +
-                        gps.data.accuracy +
-                        ', tolong kalibrasi GPS atau pakai Internet yang lebih kuat.',
-                    );
-                  }
+    try {
+      // Run fakeGPS without blocking
+      myFunctions.fakeGps()
+        .then(isFake => {
+          if (isFake) {
+            Alert.alert(
+              "Fake GPS Terdeteksi",
+              "Aplikasi mendeteksi bahwa Anda menggunakan Fake GPS.\nSilakan matikan Fake GPS sebelum melanjutkan."
+            );
+            setfakeGpsV(2);
+          } else {
+            setfakeGpsV(3);
+          }
+        })
+        .catch(err => {
+          console.log("fakeGps error:", err);
+        });
 
-                  Alert.alert(
-                    'Anda Berada Diluar',
-                    'Apa Anda mau mengganti accuracy GPS anda',
-                    [
-                      {
-                        text: 'Ya',
-                        onPress: () => {
-                          gpsChange(!highAccuracy);
-                        },
-                      },
-                      {
-                        text: 'TIdak',
-                        onPress: () => console.log('OK Pressed'),
-                        style: 'cancel',
-                      },
-                    ],
-                  );
-                } else {
-                  setJarak('2');
-                }
+      // Get permissions first
+      const [cameraOK, locationOK] = await Promise.all([
+        myFunctions.permissionCamera(),   // res[0]
+        myFunctions.permissionLocation()  // res[1]
+      ]);
 
-                // positionNew = position
-                console.log(
-                  'posisiisii ',
-                  gps.data.latitude,
-                  gps.data.longitude,
-                );
-                setForm({
-                  ...form,
-                  lat: gps.data.latitude,
-                  lng: gps.data.longitude,
-                  accuracy: gps.data.accuracy,
-                  distance: j,
-                });
-                setLoading(false);
-              }
-            })
-            .catch(error => {
-              console.log('err checkGps useeffect', error.message);
-              setLoading(false);
-            });
-        } else {
-          Alert.alert(
-            'Location Permission',
-            'Location Permission tidak diizinkan.',
-          );
-          setLoading(false);
-        }
-      })
-      .catch(e => {
-        console.log('err promise all', e);
+      if (!locationOK) {
+        Alert.alert(
+          "Location Permission",
+          "Izin lokasi ditolak."
+        );
         setLoading(false);
+        return;
+      }
+
+      // GPS with timeout protection (4s)
+      const gps = await Promise.race([
+        myFunctions.checkGps(mode),
+        new Promise(resolve =>
+          setTimeout(() => resolve({ status: false, reason: "timeout" }), 4000)
+        )
+      ]);
+
+      if (!gps.status) {
+        console.log("GPS failed:", gps.reason);
+        setLoading(false);
+        return;
+      }
+
+      console.log("GPS DATA:", gps.data);
+
+      // Calculate distance
+      const j = getDistance(gps.data, {
+        latitude: parseFloat(latref),
+        longitude: parseFloat(lngref),
       });
 
-    // setLoading(false);
+      setTest(j);
+
+      // OUTSIDE RADIUS
+      if (j > route.params.radius) {
+        setJarak("1");
+        setJ1(j);
+
+        if (gps.data.accuracy > 40) {
+          Alert.alert(
+            "Peringatan",
+            `Akurasi rendah: ${gps.data.accuracy}`
+          );
+        }
+      }
+      else {
+        setJarak("2");
+      }
+
+      // Update form
+      setForm(prev => ({
+        ...prev,
+        lat: gps.data.latitude,
+        lng: gps.data.longitude,
+        accuracy: gps.data.accuracy,
+        distance: j,
+      }));
+
+    } catch (err) {
+      console.log("gpsChange error:", err);
+    }
+
+    setLoading(false);
   };
+
 
   const storeDataHightAccuracy = async value => {
     try {
@@ -491,16 +516,16 @@ const Absence = ({navigation, route}) => {
         // 'Content-Type': 'multipart/form-data',
       },
       [
-        {name: 'id', data: route.params.id.toString()},
-        {name: 'absence_id', data: route.params.absence_id.toString()},
-        {name: 'type', data: route.params.type.toString()},
-        {name: 'queue', data: route.params.queue.toString()},
-        {name: 'staff_id', data: STAFF_ID.toString()},
-        {name: 'lat', data: form.lat.toString()},
-        {name: 'lng', data: form.lng.toString()},
-        {name: 'accuracy', data: form.accuracy.toString()},
-        {name: 'distance', data: highAccuracy ? '1111' : '2222'},
-        {name: 'status', data: '0'},
+        { name: 'id', data: route.params.id.toString() },
+        { name: 'absence_id', data: route.params.absence_id.toString() },
+        { name: 'type', data: route.params.type.toString() },
+        { name: 'queue', data: route.params.queue.toString() },
+        { name: 'staff_id', data: STAFF_ID.toString() },
+        { name: 'lat', data: form.lat.toString() },
+        { name: 'lng', data: form.lng.toString() },
+        { name: 'accuracy', data: form.accuracy.toString() },
+        { name: 'distance', data: highAccuracy ? '1111' : '2222' },
+        { name: 'status', data: '0' },
       ],
     )
       .then(result => {
@@ -544,16 +569,16 @@ const Absence = ({navigation, route}) => {
           filename: route.params.image.filename,
           data: route.params.image.base64,
         },
-        {name: 'id', data: route.params.id.toString()},
-        {name: 'absence_id', data: route.params.absence_id.toString()},
-        {name: 'type', data: route.params.type.toString()},
-        {name: 'queue', data: route.params.queue.toString()},
-        {name: 'staff_id', data: STAFF_ID.toString()},
-        {name: 'lat', data: form.lat.toString()},
-        {name: 'lng', data: form.lng.toString()},
-        {name: 'accuracy', data: form.accuracy.toString()},
-        {name: 'distance', data: highAccuracy ? '1111' : '2222'},
-        {name: 'status', data: '0'},
+        { name: 'id', data: route.params.id.toString() },
+        { name: 'absence_id', data: route.params.absence_id.toString() },
+        { name: 'type', data: route.params.type.toString() },
+        { name: 'queue', data: route.params.queue.toString() },
+        { name: 'staff_id', data: STAFF_ID.toString() },
+        { name: 'lat', data: form.lat.toString() },
+        { name: 'lng', data: form.lng.toString() },
+        { name: 'accuracy', data: form.accuracy.toString() },
+        { name: 'distance', data: highAccuracy ? '1111' : '2222' },
+        { name: 'status', data: '0' },
       ],
     )
       .then(result => {
@@ -615,7 +640,7 @@ const Absence = ({navigation, route}) => {
           Alert.alert('Err Fingerprint: ', error.name);
         }
         console.log('Biometric error', error);
-      });   
+      });
   };
 
   const handleAction = () => {
@@ -632,54 +657,7 @@ const Absence = ({navigation, route}) => {
       .then(res => {
         // setLoading(true);
         if (res[1]) {
-          //check gps
-          // myFunctions
-          //   .checkGps(route.params.highAccuracy)
-          //   .then(function (gps) {
-          // if (!gps.status) {
-          //   Alert.alert(
-          //     'Gagal Mengirim Data',
-          //     'Tolong cek kembali lokasi anda',
-          //   );
-          //   setLoading(false);
-          //   console.log('checkGps useeffect', 'false');
-          // } else {
-          // console.log('position', gps.data);
-          // //get distance
-          // const j = getDistance(gps.data, {
-          //   latitude: parseFloat(latref),
-          //   longitude: parseFloat(lngref),
-          // });
-          // console.log('distance', j);
 
-          // setTest(j);
-          // if (j > route.params.radius) {
-          //   if (j - j1 < 20) {
-          //     if (route.params.selfie == 'OFF') {
-          //       sendDataNoImg(gps.data);
-          //     } else if (route.params.image == null) {
-          //       Alert.alert('Pilih Gambar Terlebih dahulu');
-          //       setLoading(false);
-          //     } else if (
-          //       form.lat != '' &&
-          //       form.lng != '' &&
-          //       route.params.image.filename != '' &&
-          //       route.params.image.filename != null
-          //     ) {
-          //       sendData(gps.data);
-          //     } else {
-          //       console.log('data : ', form);
-          //       Alert.alert('Lengkapi data terlebih dahulu');
-          //       setLoading(false);
-          //     }
-          //   } else {
-          //     setJarak('1');
-          //     Alert.alert('diluar area');
-          //     setLoading(false);
-          //   }
-          // }
-          // else {
-          // setJarak('2');
           console.log(form.lat, form.lng);
 
           if (route.params.selfie == 'OFF') {
@@ -699,25 +677,7 @@ const Absence = ({navigation, route}) => {
             Alert.alert('Lengkapi data terlebih dahulu');
             setLoading(false);
           }
-          // }
 
-          // positionNew = position
-          // console.log(
-          //   'posisiisii ',
-          //   gps.data.latitude,
-          //   gps.data.longitude,
-          // );
-          // setForm({
-          //   ...form,
-          //   lat: gps.data.latitude,
-          //   lng: gps.data.longitude,
-          // });
-          // }
-          // })
-          // .catch(error => {
-          //   console.log('err checkGps handleaction', error.message);
-          //   setLoading(false);
-          // });
         } else {
           Alert.alert(
             'Location Permission',
@@ -735,7 +695,7 @@ const Absence = ({navigation, route}) => {
   if (fakeGpsV === 2) {
     return (
       <View>
-        <Text>
+        <Text style={{color: scheme === 'dark' ? '#000000' : '#000000'}}>
           Anda Menggunakan Fake GPS Tolong Matikan Fake GPS dan restart HP Anda
           Kembali
         </Text>
@@ -743,7 +703,7 @@ const Absence = ({navigation, route}) => {
     );
   } else if (!loading && jarak != '' && fakeGpsV != 0) {
     return (
-      <SafeAreaView style={{flex: 1}}>
+      <SafeAreaView style={{ flex: 1 }}>
         {/* <Text>{timeD}</Text> */}
         <ScrollView
           scrollEnabled={true}
@@ -752,21 +712,21 @@ const Absence = ({navigation, route}) => {
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }>
-          <View style={{alignItems: 'center'}}>
+          <View style={{ alignItems: 'center' }}>
             <Text
               style={[
-                {marginVertical: windowHeight * 0.01},
-                jarak == '1' ? {color: '#ff0000'} : '',
+                { marginVertical: windowHeight * 0.01 },
+                jarak == '1' ? { color: '#ff0000' } : '',
               ]}>
               anda berada di{' '}
               {jarak == '1' ? 'Diluar Jangkauan' : 'Dalam Jangkauan'}
             </Text>
-            <Text>
+            <Text style={{color: scheme === 'dark' ? '#000000' : '#000000'}}>
               Note : Anda menggunakan akurasi{' '}
               {highAccuracy ? 'tinggi' : 'rendah'}
             </Text>
 
-            <Text style={[{marginVertical: windowHeight * 0.05, fontSize: 24}]}>
+            <Text style={[{ marginVertical: windowHeight * 0.05, fontSize: 24, color: scheme === 'dark' ? '#000000' : '#000000' }]}>
               Absen
             </Text>
             <View
@@ -776,7 +736,7 @@ const Absence = ({navigation, route}) => {
                 backgroundColor: '#FFFFFF',
               }}>
               <MapView
-                style={{flex: 1}} //window pake Dimensions
+                style={{ flex: 1 }} //window pake Dimensions
                 // showsUserLocation={true}
                 showsMyLocationButton={true}
                 region={{
@@ -803,7 +763,7 @@ const Absence = ({navigation, route}) => {
                   }}>
                   <Callout>
                     <View>
-                      <Text>Posisi Kantor</Text>
+                      <Text style={{color: scheme === 'dark' ? '#000000' : '#000000'}}>Posisi Kantor</Text>
                     </View>
                   </Callout>
                 </Marker>
@@ -816,7 +776,7 @@ const Absence = ({navigation, route}) => {
                   }}>
                   <Callout>
                     <View>
-                      <Text>Posisi Anda</Text>
+                      <Text style={{color: scheme === 'dark' ? '#000000' : '#000000'}}>Posisi Anda</Text>
                     </View>
                   </Callout>
                 </Marker>
@@ -827,7 +787,7 @@ const Absence = ({navigation, route}) => {
 
         </View> */}
 
-            <Text>Map</Text>
+            <Text style={{color: scheme === 'dark' ? '#000000' : '#000000'}}>Map</Text>
 
             {/* untuk gambar start */}
             {route.params.selfie == 'ON' && (
@@ -840,10 +800,10 @@ const Absence = ({navigation, route}) => {
                 </TouchableOpacity>
                 {route.params.type == 'break' ? (
                   <InlineVisionCamera
-                                      route={route}
-                                      setImageUri={setImageUri}
-                                      imageUri={imageUri}
-                                    />
+                    route={route}
+                    setImageUri={setImageUri}
+                    imageUri={imageUri}
+                  />
                 ) : (
                   <TouchableOpacity
                     onPress={() =>
@@ -873,28 +833,14 @@ const Absence = ({navigation, route}) => {
                     ) : (
                       <Image
                         style={styles.image}
-                        source={{uri: route.params.image.uri}}
+                        source={{ uri: route.params.image.uri }}
                       />
                     )}
                   </TouchableOpacity>
                 )}
-                <Text>Image</Text>
+                <Text style={{color: scheme === 'dark' ? '#000000' : '#000000'}}>Image</Text>
               </View>
             )}
-            {/* untuk gambar end */}
-
-            {/* {route.params.type == 'break' && (
-              <Textarea
-                containerStyle={styles.textareaContainer}
-                style={styles.textarea}
-                placeholder="Tuliskan Memo"
-                editable={true}
-                maxLength={255}
-                value={form.memo}
-                onChangeText={value =>
-                  setForm({...form, memo: value})
-                }></Textarea>
-            )} */}
           </View>
         </ScrollView>
         {jarak != 1 && finger == 'ON' && route.params.fingerfrint == 'ON' && (
@@ -903,7 +849,7 @@ const Absence = ({navigation, route}) => {
             onPress={() => {
               authCurrent();
             }}>
-            <Text style={{color: '#FFFFFF', fontSize: 24, fontWeight: 'bold'}}>
+            <Text style={{ color: scheme === 'dark' ? '#000000' : '#000000', fontSize: 24, fontWeight: 'bold' }}>
               Absen
             </Text>
           </TouchableOpacity>
@@ -915,7 +861,7 @@ const Absence = ({navigation, route}) => {
             onPress={() => {
               handleAction();
             }}>
-            <Text style={{color: '#FFFFFF', fontSize: 24, fontWeight: 'bold'}}>
+            <Text style={{ color: scheme === 'dark' ? '#000000' : '#000000', fontSize: 24, fontWeight: 'bold' }}>
               Absen
             </Text>
           </TouchableOpacity>
@@ -927,7 +873,7 @@ const Absence = ({navigation, route}) => {
             onPress={() => {
               handleAction();
             }}>
-            <Text style={{color: '#FFFFFF', fontSize: 24, fontWeight: 'bold'}}>
+            <Text style={{ color: '#FFFFFF', fontSize: 24, fontWeight: 'bold' }}>
               Absen
             </Text>
           </TouchableOpacity>
@@ -935,6 +881,10 @@ const Absence = ({navigation, route}) => {
       </SafeAreaView>
     );
   } else {
+  //   Alert.alert(
+  //   "Peringatan Loading",
+  //   `loading: ${loading}` + ` fakeGpsV: ${fakeGpsV}` + ` jarak: ${jarak}`
+  // );
     return (
       <View>
         <ScreenLoading />

@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Dimensions,
   Alert,
+  useColorScheme
 } from 'react-native';
 import React from 'react';
 import {useState} from 'react';
@@ -37,6 +38,7 @@ const AdditionalTime = ({navigation}) => {
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
   const [mode, setMode] = useState('date');
   const [loading, setLoading] = useState(true);
+  const scheme = useColorScheme();
   const [form, setForm] = useState({
     staff_id: STAFF_ID,
     description: '',
@@ -151,7 +153,7 @@ const AdditionalTime = ({navigation}) => {
               marginLeft: 'auto',
               fontWeight: 'bold',
               fontSize: 20,
-              color: '#000000',
+              color: scheme === 'dark' ? '#000000' : '#000000'
             }}>
             Input Penambahan Jam kerja
           </Text>
@@ -163,7 +165,7 @@ const AdditionalTime = ({navigation}) => {
                 status={form.type === 'in' ? 'checked' : 'unchecked'}
                 onPress={() => setForm({...form, type: 'in'})}
               />
-              <Text style={{marginTop: 10}}>Dalam Kantor</Text>
+              <Text style={{marginTop: 10, color: scheme === 'dark' ? '#000000' : '#000000'}}>Dalam Kantor</Text>
             </View>
             <View style={{flexDirection: 'row'}}>
               <RadioButton
@@ -171,14 +173,14 @@ const AdditionalTime = ({navigation}) => {
                 status={form.type === 'outside' ? 'checked' : 'unchecked'}
                 onPress={() => setForm({...form, type: 'outside'})}
               />
-              <Text style={{marginTop: 10}}>Luar Kantor</Text>
+              <Text style={{marginTop: 10, color: scheme === 'dark' ? '#000000' : '#000000'}}>Luar Kantor</Text>
             </View>
           </View>
 
-          <Text style={styles.title}>Memo<Text style={{color: '#ff0000'}}>*</Text></Text>
+          <Text style={[styles.title,{color: scheme === 'dark' ? '#000000' : '#000000'}]}>Memo<Text style={{color: '#ff0000'}}>*</Text></Text>
           <Textarea
             containerStyle={styles.textareaContainer}
-            style={styles.textarea}
+            style={[styles.textarea,{color: scheme === 'dark' ? '#000000' : '#000000'}]}
             placeholder="Mohon isi memo dengan jelas (uraian kegiatan & lokasi kegiatan)"
             editable={true}
             maxLength={255}
@@ -202,6 +204,7 @@ const AdditionalTime = ({navigation}) => {
             style={{
               marginLeft: windowWidht * 0.05,
               marginTop: windowHeight * 0.01,
+              color: scheme === 'dark' ? '#000000' : '#000000'
             }}>
             Note : Tidak dihitung lembur
           </Text>
@@ -212,7 +215,7 @@ const AdditionalTime = ({navigation}) => {
           onPress={() => {
             handleAction();
           }}>
-          <Text style={{color: '#FFFFFF', fontSize: 24, fontWeight: 'bold'}}>
+          <Text style={{color: scheme === 'dark' ? '#000000' : '#000000', fontSize: 24, fontWeight: 'bold'}}>
             Ajukan
           </Text>
         </TouchableOpacity>

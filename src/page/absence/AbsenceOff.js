@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   Image,
   Alert,
+  useColorScheme
 } from 'react-native';
 import React, { useEffect, useState, useRef } from 'react';
 import MapView, { Callout, Marker, Circle } from 'react-native-maps';
@@ -35,6 +36,7 @@ const AbsenceOff = ({ navigation, route }) => {
   const USER_ID = useSelector(state => state.UserReducer.id);
   const STAFF_ID = useSelector(state => state.UserReducer.staff_id);
   const [timeD, setTimeD] = useState(0);
+  const scheme = useColorScheme();
 
   const [image, set_image] = useState({
     base64: '',
@@ -104,7 +106,7 @@ const AbsenceOff = ({ navigation, route }) => {
           setfakeGpsV(2);
           return (
             <View>
-              <Text>
+              <Text style={{color: scheme === 'dark' ? '#000000' : '#000000'}}>
                 Anda Menggunakan Fake GPS Tolong Matikan Fake GPS dan restart HP
                 Anda Kembali
               </Text>
@@ -116,7 +118,7 @@ const AbsenceOff = ({ navigation, route }) => {
           setfakeGpsV(3);
           return (
             <View>
-              <Text>
+              <Text style={{color: scheme === 'dark' ? '#000000' : '#000000'}}>
                 Anda Menggunakan Fake GPS Tolong Matikan Fake GPS dan restart HP
                 Anda Kembali
               </Text>
@@ -385,7 +387,7 @@ const AbsenceOff = ({ navigation, route }) => {
   if (fakeGpsV === 2 && fakeGpsV != 0) {
     return (
       <View>
-        <Text>
+        <Text style={{color: scheme === 'dark' ? '#000000' : '#000000'}}>
           Anda Menggunakan Fake GPS Tolong Matikan Fake GPS dan restart HP Anda
           Kembali
         </Text>
@@ -396,11 +398,11 @@ const AbsenceOff = ({ navigation, route }) => {
       <View style={{ flex: 1 }}>
         <ScrollView>
           <View style={{ alignItems: 'center' }}>
-            <Text style={[{ marginVertical: windowHeight * 0.01 }]}>
+            <Text style={[{ marginVertical: windowHeight * 0.01, color: scheme === 'dark' ? '#000000' : '#000000' }]}>
               anda bisa absen mengabaikan radius
             </Text>
 
-            <Text style={[{ marginVertical: windowHeight * 0.05, fontSize: 24 }]}>
+            <Text style={[{ marginVertical: windowHeight * 0.05, fontSize: 24, color: scheme === 'dark' ? '#000000' : '#000000' }]}>
               Absen
             </Text>
 
@@ -457,7 +459,7 @@ const AbsenceOff = ({ navigation, route }) => {
                     )}
                   </TouchableOpacity>
                 )}
-                <Text>Image</Text>
+                <Text style={{color: scheme === 'dark' ? '#000000' : '#000000'}}>Image</Text>
               </View>
             )}
 
@@ -466,7 +468,7 @@ const AbsenceOff = ({ navigation, route }) => {
 
             <Textarea
               containerStyle={styles.textareaContainer}
-              style={styles.textarea}
+              style={[styles.textarea, { color: scheme === 'dark' ? '#000000' : '#696969' }]}
               placeholder="Tuliskan Memo"
               editable={true}
               maxLength={255}
@@ -489,7 +491,7 @@ const AbsenceOff = ({ navigation, route }) => {
             onPress={() => {
               authCurrent();
             }}>
-            <Text style={{ color: '#FFFFFF', fontSize: 24, fontWeight: 'bold' }}>
+            <Text style={{ color: scheme === 'dark' ? '#000000' : '#000000', fontSize: 24, fontWeight: 'bold' }}>
               Absen
             </Text>
           </TouchableOpacity>
@@ -501,7 +503,7 @@ const AbsenceOff = ({ navigation, route }) => {
             onPress={() => {
               handleAction();
             }}>
-            <Text style={{ color: '#FFFFFF', fontSize: 24, fontWeight: 'bold' }}>
+            <Text style={{ color: scheme === 'dark' ? '#000000' : '#000000', fontSize: 24, fontWeight: 'bold' }}>
               Absen
             </Text>
           </TouchableOpacity>
@@ -513,7 +515,7 @@ const AbsenceOff = ({ navigation, route }) => {
             onPress={() => {
               handleAction();
             }}>
-            <Text style={{ color: '#FFFFFF', fontSize: 24, fontWeight: 'bold' }}>
+            <Text style={{ color: scheme === 'dark' ? '#000000' : '#000000', fontSize: 24, fontWeight: 'bold' }}>
               Absen
             </Text>
           </TouchableOpacity>

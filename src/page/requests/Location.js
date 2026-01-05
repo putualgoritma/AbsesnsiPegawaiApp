@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Dimensions,
   Alert,
+  useColorScheme
 } from 'react-native';
 import React from 'react';
 import {useState} from 'react';
@@ -38,6 +39,7 @@ const Location = ({navigation}) => {
   const [mode, setMode] = useState('date');
   const [loading, setLoading] = useState(true);
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
+  const scheme = useColorScheme();
   // const [checked, setChecked] = React.useState('first');
   const [form, setForm] = useState({
     staff_id: STAFF_ID,
@@ -174,12 +176,12 @@ const Location = ({navigation}) => {
               marginLeft: 'auto',
               fontWeight: 'bold',
               fontSize: 20,
-              color: '#000000',
+              color: scheme === 'dark' ? '#000000' : '#000000'
             }}>
             Input Data Titik Lokasi
           </Text>
 
-          <Text style={styles.title}>Pilih Lokasi</Text>
+          <Text style={[styles.title,{color: scheme === 'dark' ? '#000000' : '#000000'}]}>Pilih Lokasi</Text>
 
           <View style={styles.inputselect}>
             <SelectDropdown
@@ -224,10 +226,10 @@ const Location = ({navigation}) => {
             />
           </View>
 
-          <Text style={styles.title}>Pilih Tanggal</Text>
+          <Text style={[styles.title,{color: scheme === 'dark' ? '#000000' : '#000000'}]}>Pilih Tanggal</Text>
 
           <TouchableOpacity style={styles.input} onPress={showDatePicker}>
-            <Text style={styles.text}>{date}</Text>
+            <Text style={[styles.text,{color: scheme === 'dark' ? '#000000' : '#000000'}]}>{date}</Text>
           </TouchableOpacity>
           <DateTimePickerModal
             isVisible={isDatePickerVisible}
@@ -236,10 +238,10 @@ const Location = ({navigation}) => {
             onCancel={hideDatePicker}
           />
 
-          <Text style={styles.title}>Memo<Text style={{color: '#ff0000'}}>*</Text></Text>
+          <Text style={[styles.title,{color: scheme === 'dark' ? '#000000' : '#000000'}]}>Memo<Text style={{color: '#ff0000'}}>*</Text></Text>
           <Textarea
             containerStyle={styles.textareaContainer}
-            style={styles.textarea}
+            style={[styles.textarea,{color: scheme === 'dark' ? '#000000' : '#000000'}]}
             placeholder="Mohon isi memo dengan jelas (uraian kegiatan & lokasi kegiatan)"
             editable={true}
             maxLength={255}
@@ -265,7 +267,7 @@ const Location = ({navigation}) => {
           onPress={() => {
             handleAction();
           }}>
-          <Text style={{color: '#FFFFFF', fontSize: 24, fontWeight: 'bold'}}>
+          <Text style={{color: scheme === 'dark' ? '#000000' : '#000000', fontSize: 24, fontWeight: 'bold'}}>
             Ajukan
           </Text>
         </TouchableOpacity>

@@ -121,198 +121,185 @@ const AbsenceExtra = ({navigation, route}) => {
   };
 
   useEffect(() => {
-    // alert(route.params.lat + route.params.lng);
-    console.log(route.params);
-    setLoading(true);
-    fakeGps();
-    Promise.all([
-      myFunctions.checkFingerprint(),
-      myFunctions.permissionCamera(),
-      myFunctions.permissionLocation(),
-    ])
-      .then(res => {
-        setLoading(true);
-        //if fingerprint off
-        if (!res[0]) {
-          setFinger('OFF');
-        }
-        //if perrmission loc
-        if (res[2]) {
-          //check gps
-          myFunctions
-            .checkGps(route.params.highAccuracy)
-            .then(function (gps) {
-              if (!gps.status) {
-                setLoading(false);
-                console.log('checkGps useeffect', 'false');
-              } else {
-                console.log('position', gps.data);
-                console.log(
-                  'You are ',
-                  getDistance(gps.data, {
-                    latitude: parseFloat(route.params.lat),
-                    longitude: parseFloat(route.params.lng),
-                  }),
-                  'meters away from 51.525, 7.4575',
+  let isMounted = true;
+
+  const init = async () => {
+    try {
+      setLoading(true);
+
+      // Run Fake GPS but DO NOT block init
+      myFunctions.fakeGps()
+        .then(isFake => {
+          if (!isMounted) return;
+          setfakeGpsV(isFake ? 2 : 3);
+        })
+        .catch(err => console.log("fakeGps error:", err));
+
+      const [fingerOK, cameraOK, locationOK] = await Promise.all([
+        myFunctions.checkFingerprint(),
+        myFunctions.permissionCamera(),
+        myFunctions.permissionLocation(),
+      ]);
+
+      if (!isMounted) return;
+
+      if (!fingerOK){
+                Alert.alert(
+                  "Fingerprint Permission",
+                  "Fingerprint Error."
                 );
-
-                const j = getDistance(gps.data, {
-                  latitude: parseFloat(route.params.lat),
-                  longitude: parseFloat(route.params.lng),
-                });
-                // Working with W3C Geolocation API
-
-                setTest(j);
-                if (j > route.params.radius) {
-                  setJarak('1');
-                  setJ1(j);
-                  if (gps.data.accuracy > 40) {
-                    Alert.alert(
-                      'Peringatan',
-                      'Anda berada di luar jangkauan, akurasi GPS: ' +
-                        gps.data.accuracy +
-                        ', tolong kalibrasi GPS atau pakai Internet yang lebih kuat.',
-                    );
-                  }
-                } else {
-                  setJarak('2');
-                }
-
-                // console.log('posisi',position);
-                // defaultLoc = {
-                //     latitude: gps.data.latitude,
-                //     longitude: gps.data.longitude,
-                // }
-                // positionNew = position
-                console.log(
-                  'posisiisii ',
-                  gps.data.latitude,
-                  gps.data.longitude,
-                );
-                setForm({
-                  ...form,
-                  lat: gps.data.latitude,
-                  lng: gps.data.longitude,
-                  accuracy: gps.data.accuracy,
-                  distance: j,
-                });
-                setLoading(false);
+                // setFinger("OFF");
               }
-            })
-            .catch(error => {
-              console.log('err checkGps useeffect', error.message);
-              setLoading(false);
-            });
-        } else {
-          Alert.alert(
-            'Location Permission',
-            'Location Permission tidak diizinkan.',
-          );
-        }
-        setLoading(false);
-      })
-      .catch(e => {
-        console.log('err promise all', e);
-        setLoading(false);
+
+      if (!locationOK) {
+        Alert.alert(
+          "Location Permission",
+          "Location Permission tidak diizinkan."
+        );
+        return;
+      }
+
+      const gps = await myFunctions.checkGps(route.params.highAccuracy);
+
+      if (!gps.status) {
+        console.log("checkGps useEffect:", "false");
+        return;
+      }
+
+      const j = getDistance(gps.data, {
+        latitude: parseFloat(route.params.lat),
+        longitude: parseFloat(route.params.lng),
       });
 
-    setLoading(false);
-  }, []);
+      setTest(j);
+
+      if (j > route.params.radius) {
+        setJarak("1");
+        setJ1(j);
+
+        if (gps.data.accuracy > 40) {
+          Alert.alert(
+            "Peringatan",
+            "Anda berada di luar jangkauan, akurasi GPS: " +
+              gps.data.accuracy +
+              ", tolong kalibrasi GPS atau pakai Internet yang lebih kuat."
+          );
+        }
+      } else {
+        setJarak("2");
+      }
+
+      if (!isMounted) return;
+
+      setForm(prev => ({
+        ...prev,
+        lat: gps.data.latitude,
+        lng: gps.data.longitude,
+        accuracy: gps.data.accuracy,
+        distance: j,
+      }));
+    } catch (e) {
+      console.log("err init useEffect:", e);
+    } finally {
+      if (isMounted) setLoading(false);
+    }
+  };
+
+  init();
+
+  return () => {
+    isMounted = false;
+  };
+}, []);
+
 
   const onRefresh = React.useCallback(() => {
-    setRefreshing(true);
-    console.log(route.params);
-    setLoading(true);
+  let isMounted = true;
 
-    Promise.all([
-      myFunctions.checkFingerprint(),
-      myFunctions.permissionCamera(),
-      myFunctions.permissionLocation(),
-    ])
-      .then(res => {
-        setLoading(true);
-        //if fingerprint off
-        if (!res[0]) {
-          setFinger('OFF');
-        }
-        //if perrmission loc
-        if (res[2]) {
-          //check gps
-          myFunctions
-            .checkGps(route.params.highAccuracy)
-            .then(function (gps) {
-              if (!gps.status) {
-                setLoading(false);
-                console.log('checkGps useeffect', 'false');
-              } else {
-                console.log('position', gps.data);
-                console.log(
-                  'You are ',
-                  getDistance(gps.data, {
-                    latitude: parseFloat(route.params.lat),
-                    longitude: parseFloat(route.params.lng),
-                  }),
-                  'meters away from 51.525, 7.4575',
+  const refresh = async () => {
+    try {
+      setRefreshing(true);
+      setLoading(true);
+
+      // Reset fake GPS value
+      setfakeGpsV(0);
+
+      myFunctions.fakeGps()
+        .then(isFake => {
+          if (!isMounted) return;
+          setfakeGpsV(isFake ? 2 : 3);
+        })
+        .catch(err => console.log("fakeGps error:", err));
+
+      const [fingerOK, cameraOK, locationOK] = await Promise.all([
+        myFunctions.checkFingerprint(),
+        myFunctions.permissionCamera(),
+        myFunctions.permissionLocation(),
+      ]);
+
+      if (!isMounted) return;
+
+      if (!fingerOK){
+                Alert.alert(
+                  "Fingerprint Permission",
+                  "Fingerprint Error."
                 );
-
-                // tesss1
-
-                const j = getDistance(gps.data, {
-                  latitude: parseFloat(route.params.lat),
-                  longitude: parseFloat(route.params.lng),
-                });
-                // Working with W3C Geolocation API
-
-                setTest(j);
-                if (j > route.params.radius) {
-                  setJarak('1');
-                  setJ1(j);
-                } else {
-                  setJarak('2');
-                }
-
-                // console.log('posisi',position);
-                // defaultLoc = {
-                //     latitude: gps.data.latitude,
-                //     longitude: gps.data.longitude,
-                // }
-                // positionNew = position
-                console.log(
-                  'posisiisii ',
-                  gps.data.latitude,
-                  gps.data.longitude,
-                );
-                setForm({
-                  ...form,
-                  lat: gps.data.latitude,
-                  lng: gps.data.longitude,
-                });
-                setLoading(false);
+                // setFinger("OFF");
               }
-            })
-            .catch(error => {
-              console.log('err checkGps useeffect', error.message);
-              setLoading(false);
-            });
-        } else {
-          Alert.alert(
-            'Location Permission',
-            'Location Permission tidak diizinkan.',
-          );
-        }
-        setLoading(false);
-      })
-      .catch(e => {
-        console.log('err promise all', e);
-        setLoading(false);
+
+      if (!locationOK) {
+        Alert.alert(
+          "Location Permission",
+          "Location Permission tidak diizinkan."
+        );
+        return;
+      }
+
+      const gps = await myFunctions.checkGps(route.params.highAccuracy);
+
+      if (!gps.status) {
+        console.log("checkGps refresh:", "false");
+        return;
+      }
+
+      const j = getDistance(gps.data, {
+        latitude: parseFloat(route.params.lat),
+        longitude: parseFloat(route.params.lng),
       });
 
-    setLoading(false);
+      setTest(j);
 
-    setTimeout(() => {
-      setRefreshing(false);
-    }, 2000);
-  }, []);
+      if (j > route.params.radius) {
+        setJarak("1");
+        setJ1(j);
+      } else {
+        setJarak("2");
+      }
+
+      if (!isMounted) return;
+
+      setForm(prev => ({
+        ...prev,
+        lat: gps.data.latitude,
+        lng: gps.data.longitude,
+      }));
+    } catch (e) {
+      console.log("err onRefresh:", e);
+    } finally {
+      if (isMounted) {
+        setLoading(false);
+        setRefreshing(false);
+      }
+    }
+  };
+
+  refresh();
+
+  return () => {
+    isMounted = false;
+  };
+}, []);
+
 
   const [image, set_image] = useState({
     base64: '',
@@ -475,9 +462,13 @@ const AbsenceExtra = ({navigation, route}) => {
       .then(res => {
         setLoading(true);
         //if fingerprint off
-        if (!res[0]) {
-          setFinger('OFF');
-        }
+        if (!res[0]){
+                  Alert.alert(
+                    "Fingerprint Permission",
+                    "Fingerprint Error."
+                  );
+                  // setFinger("OFF");
+                }
         //if perrmission loc
         if (res[2]) {
           //check gps
@@ -790,6 +781,10 @@ const AbsenceExtra = ({navigation, route}) => {
       </SafeAreaView>
     );
   } else {
+  //   Alert.alert(
+  //   "Peringatan Loading",
+  //   `loading: ${loading}` + ` fakeGpsV: ${fakeGpsV}` + ` jarak: ${jarak}`
+  // );
     return (
       <View>
         <ScreenLoading />
